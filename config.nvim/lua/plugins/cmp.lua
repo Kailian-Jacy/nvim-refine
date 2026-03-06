@@ -84,7 +84,11 @@ return {
 
       -- Prefer items that start with the input (prefix match) over fuzzy matches
       local prefix_match_comparator = function(entry1, entry2)
-        local input = entry1.context.cursor_before_line:match("[%w_]+$") or ""
+        local ctx = entry1.context
+        if not ctx or not ctx.cursor_before_line then
+          return nil
+        end
+        local input = ctx.cursor_before_line:match("[%w_]+$") or ""
         if #input == 0 then
           return nil
         end
