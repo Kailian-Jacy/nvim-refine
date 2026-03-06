@@ -217,6 +217,64 @@ return {
         desc = "Session",
       },
       -- { "<leader>dw", function() require("dap.ui.widgets").hover() end, desc = "Widgets" },
+      -- Enable/disable all breakpoints
+      {
+        "<leader>xE",
+        function()
+          -- Toggle all breakpoints enabled/disabled
+          local dap = require("dap")
+          local bps = require("dap.breakpoints")
+          local all_bps = bps.get()
+          local has_any = false
+          for _, buf_bps in pairs(all_bps) do
+            if #buf_bps > 0 then
+              has_any = true
+              break
+            end
+          end
+          if not has_any then
+            vim.print_silent("No breakpoints set.")
+            return
+          end
+          -- Toggle: if breakpoints are currently "active" (shown), remove them all but save state.
+          -- If they were disabled, restore them.
+          if vim.g._dap_breakpoints_disabled then
+            -- Re-enable: restore saved breakpoints
+            local saved = vim.g._dap_breakpoints_saved or {}
+            for bufnr_str, buf_bps in pairs(saved) do
+              local bufnr = tonumber(bufnr_str)
+              if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
+                for _, bp in ipairs(buf_bps) do
+                  dap.set_breakpoint(bp.condition, bp.hit_condition, bp.log_message)
+                end
+              end
+            end
+            vim.g._dap_breakpoints_disabled = false
+            vim.g._dap_breakpoints_saved = nil
+            vim.print_silent("All breakpoints enabled.")
+          else
+            -- Disable: save current breakpoints and clear all
+            local saved = {}
+            for bufnr, buf_bps in pairs(all_bps) do
+              saved[tostring(bufnr)] = buf_bps
+            end
+            vim.g._dap_breakpoints_saved = saved
+            -- Clear all breakpoints from all buffers
+            for bufnr, _ in pairs(all_bps) do
+              if vim.api.nvim_buf_is_valid(bufnr) then
+                bps.clear(bufnr)
+                -- Update signs
+                pcall(function()
+                  require("dap.breakpoints").to_qf_list(bps.get())
+                end)
+              end
+            end
+            vim.g._dap_breakpoints_disabled = true
+            vim.print_silent("All breakpoints disabled.")
+          end
+        end,
+        desc = "Enable/disable all breakpoints",
+      },
     },
     config = function()
       local dap = require("dap")
@@ -378,6 +436,168 @@ return {
       dap.defaults.fallback.force_external_terminal = false
       -- Focus the main editor (not the terminal) after launch
       dap.defaults.fallback.focus_terminal = false
+
+      -- ============================================================
+      -- Per-project debug configuration templates
+      -- ============================================================
+      -- :DapConfigTemplate creates a starter launch.json for the detected project type
+      vim.api.nvim_create_user_command("DapConfigTemplate", function(opts)
+        local cwd = vim.fn.getcwd()
+        local vscode_dir = cwd .. "/.vscode"
+        local launch_json = vscode_dir .. "/launch.json"
+
+        if vim.fn.filereadable(launch_json) == 1 then
+          local choice = vim.fn.confirm("launch.json already exists. Overwrite?", "&Yes\n&No", 2)
+          if choice ~= 1 then
+            vim.print_silent("Aborted.")
+            return
+          end
+        end
+
+        -- Auto-detect project type
+        local project_type = opts.args
+        if not project_type or #project_type == 0 then
+          -- Try to detect from files in cwd
+          if vim.fn.glob(cwd .. "/Cargo.toml") ~= "" then
+            project_type = "rust"
+          elseif vim.fn.glob(cwd .. "/go.mod") ~= "" then
+            project_type = "go"
+          elseif vim.fn.glob(cwd .. "/CMakeLists.txt") ~= "" or vim.fn.glob(cwd .. "/Makefile") ~= "" then
+            project_type = "cpp"
+          elseif vim.fn.glob(cwd .. "/*.py") ~= "" or vim.fn.glob(cwd .. "/setup.py") ~= "" or vim.fn.glob(cwd .. "/pyproject.toml") ~= "" then
+            project_type = "python"
+          elseif vim.fn.glob(cwd .. "/*.sh") ~= "" then
+            project_type = "bash"
+          else
+            project_type = "generic"
+          end
+        end
+
+        ---@type table<string, string>
+        local templates = {
+          rust = [[{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "codelldb",
+      "request": "launch",
+      "name": "Debug (codelldb)",
+      "program": "${workspaceFolder}/target/debug/${workspaceFolderBasename}",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "sourceLanguages": ["rust"],
+      "preLaunchTask": "cargo build"
+    }
+  ]
+}]],
+          go = [[{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "go",
+      "request": "launch",
+      "name": "Debug (dlv)",
+      "mode": "debug",
+      "program": "${workspaceFolder}",
+      "args": []
+    },
+    {
+      "type": "go",
+      "request": "launch",
+      "name": "Debug Test",
+      "mode": "test",
+      "program": "${file}",
+      "args": []
+    }
+  ]
+}]],
+          cpp = [[{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "cppdbg",
+      "request": "launch",
+      "name": "Debug (cppdbg)",
+      "program": "${workspaceFolder}/build/${workspaceFolderBasename}",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "MIMode": "gdb",
+      "setupCommands": [
+        { "text": "-enable-pretty-printing", "ignoreFailures": true }
+      ]
+    },
+    {
+      "type": "codelldb",
+      "request": "launch",
+      "name": "Debug (codelldb)",
+      "program": "${workspaceFolder}/build/${workspaceFolderBasename}",
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}]],
+          python = [[{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "debugpy",
+      "request": "launch",
+      "name": "Debug Current File",
+      "program": "${file}",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "debugpy",
+      "request": "launch",
+      "name": "Debug Module",
+      "module": "${workspaceFolderBasename}",
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}]],
+          bash = [[{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "sh",
+      "request": "launch",
+      "name": "Debug Script",
+      "program": "${file}",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}]],
+          generic = [[{
+  "version": "0.2.0",
+  "configurations": []
+}]],
+        }
+
+        local template = templates[project_type] or templates.generic
+
+        if vim.fn.isdirectory(vscode_dir) == 0 then
+          vim.fn.mkdir(vscode_dir, "p")
+        end
+
+        local file = io.open(launch_json, "w")
+        if file then
+          file:write(template)
+          file:close()
+          vim.cmd("edit " .. launch_json)
+          vim.print_silent("Created " .. project_type .. " launch.json template.")
+        else
+          vim.notify("Failed to create launch.json", vim.log.levels.ERROR)
+        end
+      end, {
+        desc = "Create a launch.json template for the detected (or specified) project type",
+        nargs = "?",
+        complete = function()
+          return { "rust", "go", "cpp", "python", "bash", "generic" }
+        end,
+      })
 
       -- ============================================================
       -- Sign customization for breakpoints

@@ -552,6 +552,52 @@ local debugging_keymaps = {
     end,
     desc = "Stop session"
   },
+  {
+    normalModeKey = "<leader>dX",
+    debugModeKey = "X",
+    action = function()
+      -- Enable/disable all breakpoints (mirrors <leader>xE)
+      local dap = require("dap")
+      local bps = require("dap.breakpoints")
+      local all_bps = bps.get()
+      local has_any = false
+      for _, buf_bps in pairs(all_bps) do
+        if #buf_bps > 0 then has_any = true; break end
+      end
+      if not has_any and not vim.g._dap_breakpoints_disabled then
+        vim.print_silent("No breakpoints set.")
+        return
+      end
+      if vim.g._dap_breakpoints_disabled then
+        local saved = vim.g._dap_breakpoints_saved or {}
+        for bufnr_str, buf_bps_saved in pairs(saved) do
+          local bufnr = tonumber(bufnr_str)
+          if bufnr and vim.api.nvim_buf_is_valid(bufnr) then
+            for _, bp in ipairs(buf_bps_saved) do
+              dap.set_breakpoint(bp.condition, bp.hit_condition, bp.log_message)
+            end
+          end
+        end
+        vim.g._dap_breakpoints_disabled = false
+        vim.g._dap_breakpoints_saved = nil
+        vim.print_silent("All breakpoints enabled.")
+      else
+        local saved = {}
+        for bufnr, buf_bps_data in pairs(all_bps) do
+          saved[tostring(bufnr)] = buf_bps_data
+        end
+        vim.g._dap_breakpoints_saved = saved
+        for bufnr, _ in pairs(all_bps) do
+          if vim.api.nvim_buf_is_valid(bufnr) then
+            bps.clear(bufnr)
+          end
+        end
+        vim.g._dap_breakpoints_disabled = true
+        vim.print_silent("All breakpoints disabled.")
+      end
+    end,
+    desc = "Toggle all breakpoints enable/disable"
+  },
 }
 
 -- Set normal mode keymaps.
