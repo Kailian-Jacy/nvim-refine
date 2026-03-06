@@ -139,7 +139,7 @@ vim.opt.expandtab = true
 vim.g.dotenv_dir = vim.fn.expand("$HOME/")
 
 -- obsidian related settings.
-vim.g.obsidian_executable = "/applications/obsidian.app"
+vim.g.obsidian_executable = "/Applications/Obsidian.app"
 vim.g.obsidian_functions_enabled = require("config.helpers").obsidian_app_exists()
 vim.g.obsidian_vault = "/Users/kailianjacy/Library/Mobile Documents/iCloud~md~obsidian/Documents/universe"
 

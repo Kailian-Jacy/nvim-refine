@@ -48,7 +48,7 @@ autocmd FileType journal setlocal shiftwidth=2 tabstop=2 softtabstop=2
 """ Diagnostics (Telescope-based)
 nnoremap <leader>le <cmd>Telescope diagnostics severity=1<cr>
 nnoremap <leader>lw <cmd>Telescope diagnostics severity=2<cr>
-nnoremap gh <cmd>vim.lsp.buf.hover()<cr>
+nnoremap gh <cmd>lua vim.lsp.buf.hover()<cr>
 
 """ Debugging related
 nnoremap <leader>sd <cmd>Telescope dap commands<cr>

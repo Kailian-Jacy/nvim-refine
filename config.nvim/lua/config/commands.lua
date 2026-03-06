@@ -115,7 +115,7 @@ vim.api.nvim_create_user_command("RunScript", function()
     runner_literal = runner.runner()
     -- false or nil
     if not runner_literal then
-      vim.notify("runner function returned abortion.", vim.log.level.INFO)
+      vim.notify("runner function returned abortion.", vim.log.levels.INFO)
       return
     end
   else
@@ -132,7 +132,7 @@ vim.api.nvim_create_user_command("RunScript", function()
     template_literal = runner.template(runner_literal, text_literal)
     -- false or nil
     if not template_literal then
-      vim.notify("template function returned abortion.", vim.log.level.INFO)
+      vim.notify("template function returned abortion.", vim.log.levels.INFO)
       return
     end
   else
@@ -230,7 +230,7 @@ vim.api.nvim_create_user_command("RunScript", function()
     )
 
     if not ok then
-      vim.notify(string.format("runner function returned error: %s", job_or_err), vim.log.level.INFO)
+      vim.notify(string.format("runner function returned error: %s", job_or_err), vim.log.levels.INFO)
       return
     end
 
