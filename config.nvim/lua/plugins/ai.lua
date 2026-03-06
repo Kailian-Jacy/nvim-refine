@@ -53,20 +53,51 @@ return {
     end
   )(),
   {
+    -- Quick one-key AI modification helper.
+    -- Addresses nvim-config#14: A quick one-key ai modification helper.
+    -- Philosophy: keep it simple, select code → one key → AI edits in place.
     "robitx/gp.nvim",
     lazy = true,
     keys = {
+      -- Primary: one-key rewrite (implements pseudocode, fixes based on comments).
       {
         "<leader>ae",
         "V:'<,'>Rewrite<CR>",
         mode = { "n" },
-        desc = "Rewrite unfinished code.",
+        desc = "AI: Rewrite current line",
       },
       {
         "<leader>ae",
         ":'<,'>Rewrite<CR>",
         mode = { "v" },
-        desc = "Rewrite unfinished code.",
+        desc = "AI: Rewrite selection",
+      },
+      -- Hazard check: review selected code for potential issues.
+      {
+        "<leader>ac",
+        ":'<,'>HazardCheck<CR>",
+        mode = { "v" },
+        desc = "AI: Check for hazards/issues",
+      },
+      {
+        "<leader>ac",
+        "V:'<,'>HazardCheck<CR>",
+        mode = { "n" },
+        desc = "AI: Check current line for hazards",
+      },
+      -- Explain: quick explanation of selected code.
+      {
+        "<leader>ax",
+        ":'<,'>Explain<CR>",
+        mode = { "v" },
+        desc = "AI: Explain selection",
+      },
+      -- Abort: stop ongoing AI generation.
+      {
+        "<leader>a<c-c>",
+        "<cmd>GpStop<CR>",
+        mode = { "n", "v" },
+        desc = "AI: Stop generation",
       },
     },
     opts = {
@@ -75,15 +106,7 @@ return {
         deepseek_internal = {
           disable = false,
           endpoint = os.getenv("DEEPSEEK_INTERNAL_ENDPOINT"),
-          secret = os.getenv("DEEPSEEK_INTERNAL_API_KEY")
-          -- secret = (function()
-          --   local api_key = os.getenv("OPENROUTER_API_KEY")
-          --   if not api_key then
-          --     vim.notify("no openrouter api key found.", vim.log.levels.INFO)
-          --     return ""
-          --   end
-          --   return api_key
-          -- end)(),
+          secret = os.getenv("DEEPSEEK_INTERNAL_API_KEY"),
         }
       },
       agents = {
@@ -102,7 +125,28 @@ Under any condition, You should NOT give ANY wasted text except code. If anythin
           model = {
             model = "cloudsway-claude-opus-4.5",
           }
-        }
+        },
+        {
+          -- Lightweight reviewer agent for hazard check.
+          provider = "deepseek_internal",
+          name = "reviewer",
+          chat = false,
+          system_prompt = [[
+You are a code reviewer. Analyze the given code for:
+1. Potential bugs, null pointer dereferences, race conditions.
+2. Resource leaks (file handles, memory, connections).
+3. Security vulnerabilities (injection, overflow, etc).
+4. Logic errors or edge cases not handled.
+
+Add brief WARNING comments inline at the problematic lines.
+Format: # WARNING: (AI) <description> (for Python) or // WARNING: (AI) <description> (for C/Go/Rust/JS).
+Keep the original code intact. ONLY add warning comments. Do not modify the code itself.
+Output the code with warnings as-is replacement.
+          ]],
+          model = {
+            model = "cloudsway-claude-opus-4.5",
+          }
+        },
       },
       whisper = {
         disable = true,
@@ -111,7 +155,7 @@ Under any condition, You should NOT give ANY wasted text except code. If anythin
         disable = true,
       },
       hooks = {
-        -- GpImplement rewrites the provided selection/range based on comments in it
+        -- Rewrite: implements pseudocode or fixes based on comments.
         Rewrite = function(gp, params)
           local template = "Having following from {{filename}}:\n\n"
               .. "```{{filetype}}\n{{selection}}\n```\n\n"
@@ -126,8 +170,48 @@ Under any condition, You should NOT give ANY wasted text except code. If anythin
             gp.Target.rewrite,
             agent,
             template,
-            nil, -- command will run directly without any prompting for user input
-            nil -- no predefined instructions (e.g. speech-to-text from Whisper)
+            nil,
+            nil
+          )
+        end,
+
+        -- HazardCheck: review code and add warning comments.
+        HazardCheck = function(gp, params)
+          local template = "Review this {{filetype}} code from {{filename}} for potential hazards:\n\n"
+              .. "```{{filetype}}\n{{selection}}\n```\n\n"
+              .. "Add inline WARNING comments at problematic lines. Keep all original code intact."
+              .. "\n\nRespond exclusively with the code (with added warnings) that should replace the selection above."
+
+          local agent = gp.get_command_agent("reviewer")
+          gp.logger.info("Hazard checking with agent: " .. agent.name)
+
+          gp.Prompt(
+            params,
+            gp.Target.rewrite,
+            agent,
+            template,
+            nil,
+            nil
+          )
+        end,
+
+        -- Explain: explain code in a popup (does not modify).
+        Explain = function(gp, params)
+          local template = "Explain this {{filetype}} code briefly and clearly:\n\n"
+              .. "```{{filetype}}\n{{selection}}\n```\n\n"
+              .. "Focus on: what it does, key design decisions, and any non-obvious behavior."
+              .. " Keep explanation concise (max 10 lines)."
+
+          local agent = gp.get_command_agent("inline")
+          gp.logger.info("Explaining selection with agent: " .. agent.name)
+
+          gp.Prompt(
+            params,
+            gp.Target.popup,
+            agent,
+            template,
+            nil,
+            nil
           )
         end,
       }
