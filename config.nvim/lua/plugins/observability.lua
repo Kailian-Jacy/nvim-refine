@@ -19,11 +19,15 @@ return {
     end,
   },
   {
-    -- Virtual plugin for custom observability commands
+    -- Virtual plugin for custom observability commands.
+    -- Using init instead of config because lazy.nvim's config() only runs
+    -- after a plugin module loads. With dir pointing to the config directory,
+    -- there's no real plugin module to load, so config() never executes.
+    -- init() always runs during startup regardless of plugin load state.
     dir = vim.fn.stdpath("config"),
     name = "nvim-observability",
     lazy = false,
-    config = function()
+    init = function()
       -- ============================================================
       -- 1. Startup time tracking
       -- ============================================================
