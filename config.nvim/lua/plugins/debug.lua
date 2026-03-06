@@ -195,11 +195,11 @@ return {
 
       -- Starting.
       dap.listeners.before["event_stopped"]["nvim-dap-noui"] = function(_, _)
-        vim.g.debugging_status = "Running"
+        vim.g.debugging_status = "Stopped"
         require("lualine").refresh()
       end
       dap.listeners.before["event_continued"]["nvim-dap-noui"] = function(_, _)
-        vim.g.debugging_status = "Stopped"
+        vim.g.debugging_status = "Running"
         require("lualine").refresh()
       end
 
