@@ -364,7 +364,7 @@ end
 ---@field debugModeKey string
 ---@field action string | function
 ---@field desc string
----@field visual_model boolean | nil @default false
+---@field visual_mode boolean | nil @default false
 
 ---@alias DebuggingKeymaps DebuggingKeymapItem[]
 
@@ -417,7 +417,7 @@ local debugging_keymaps = {
       vim.api.nvim_feedkeys(":DapViewWatch " .. placeholder, "n", false) -- No CR to allow further edition.
     end,
     desc = "Add watch point",
-    visual_model = true
+    visual_mode = true
   },
   {
     normalModeKey = "<leader>dn",
@@ -557,7 +557,7 @@ local debugging_keymaps = {
 for _, item in ipairs(debugging_keymaps) do
   ---@type string | string[]
   local mode = "n"
-  if item.visual_model then
+  if item.visual_mode then
     mode = { "n", "v" }
   end
   vim.keymap.set(mode, item.normalModeKey, item.action, { noremap = true, silent = true })
@@ -575,7 +575,7 @@ vim.g.nvim_dap_keymap = function()
   for _, item in ipairs(debugging_keymaps) do
     ---@type string | string[]
     local mode = "n"
-    if item.visual_model then
+    if item.visual_mode then
       mode = { "n", "v" }
     end
     -- local mode, keymap = key:match("([^|]*)|?(.*)")
@@ -606,7 +606,7 @@ vim.g.nvim_dap_upmap = function()
     for _, v in pairs(vim.g.nvim_dap_noui_backup_keymap or {}) do
       if v.lhs == k then
         local nr = (v.noremap == 1)
-        local sl = (v.slient == 1)
+        local sl = (v.silent == 1)
         local exp = (v.expr == 1)
         local mode = v.mode
         local desc = v.desc or "dap noui keymap"
