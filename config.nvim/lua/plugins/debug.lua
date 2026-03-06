@@ -8,9 +8,8 @@ return {
   },
   {
     "igorlfs/nvim-dap-view",
-    -- If it's lazy loaded, it will cause failure to mount event on dap
-    -- So keymaps won't trigger
-    lazy = false,
+    -- lazy load: will be activated by cmd or keys
+    lazy = true,
     cmd = {
       "DapViewToggle",
       "DapViewOpen",
@@ -97,7 +96,7 @@ return {
     dependencies = {
       "jbyuki/one-small-step-for-vimkind",
     },
-    lazy = false,
+    lazy = true,
     keys = {
       -- { "<leader>d", "", desc = "+debug", mode = {"n", "v"} },
       -- break points.
