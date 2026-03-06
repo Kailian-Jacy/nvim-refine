@@ -81,7 +81,7 @@ end)
 
 -- Interrupt code runner 
 vim.keymap.set({ "i", "n" }, "<C-c>", function()
-  local uv = vim.uv or vim.loop
+  local uv = vim.uv
   if vim.g._current_runner then
     uv.kill(vim.g._current_runner, 9)
     vim.g._current_runner = nil
