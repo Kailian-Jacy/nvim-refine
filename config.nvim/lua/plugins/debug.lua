@@ -31,6 +31,22 @@ return {
             vim.keymap.set("n", "q", "<C-w>q", { buffer = args.buf })
         end,
       })
+      -- REPL C-c line clearing (Issue #10: C-c is not clearing the line)
+      vim.api.nvim_create_autocmd({ "FileType" }, {
+        pattern = { "dap-repl" },
+        callback = function(args)
+          -- In insert mode, C-c clears the current line in REPL
+          vim.keymap.set("i", "<C-c>", function()
+            -- Clear text on current line (REPL prompt line)
+            local row = vim.api.nvim_win_get_cursor(0)[1]
+            local line = vim.api.nvim_get_current_line()
+            -- REPL lines often have a prompt prefix; preserve it
+            local prompt = line:match("^(dap> )") or line:match("^(>>> )") or line:match("^(%.%.%. )") or ""
+            vim.api.nvim_set_current_line(prompt)
+            vim.api.nvim_win_set_cursor(0, { row, #prompt })
+          end, { buffer = args.buf, desc = "Clear REPL line with C-c" })
+        end,
+      })
       require("dap-view").setup({
         winbar = {
           show = true, -- For now.

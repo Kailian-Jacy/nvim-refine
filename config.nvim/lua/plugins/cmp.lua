@@ -32,6 +32,8 @@ return {
       { "hrsh7th/cmp-buffer" },
       { "hrsh7th/cmp-git" },
       { "hrsh7th/cmp-path" },
+      -- DAP REPL completion (Issue #10: auto cmp for REPL)
+      { "rcarriga/cmp-dap" },
     },
     config = function()
       local cmp = require("cmp")
@@ -417,6 +419,49 @@ return {
           { name = "cmdline", max_item_count = 7 },
           { name = "cmdline_history", max_item_count = 7 },
           { name = "buffer", max_item_count = 7 }, -- used for replacement
+        }),
+      })
+
+      -- DAP REPL completion (Issue #10: auto cmp configuration for REPL)
+      -- Enable cmp in dap-repl and dap-view buffers (dapui_watches, etc.)
+      cmp.setup.filetype({ "dap-repl", "dapui_watches", "dapui_hover" }, {
+        sources = cmp.config.sources({
+          { name = "dap" },
+        }),
+        -- Inherit the default mappings
+        mapping = cmp.mapping.preset.insert({
+          ["<Tab>"] = function(fallback)
+            if cmp.visible() and cmp.get_selected_entry() then
+              cmp.confirm({ select = false, behavior = cmp.ConfirmBehavior.Replace })
+            else
+              fallback()
+            end
+          end,
+          ["<CR>"] = function(fallback)
+            if cmp.visible() and cmp.get_selected_entry() then
+              cmp.confirm()
+            else
+              fallback()
+            end
+          end,
+          ["<Down>"] = function(_)
+            if cmp.visible() then
+              cmp.select_next_item()
+            end
+          end,
+          ["<Up>"] = function(_)
+            if cmp.visible() then
+              cmp.select_prev_item()
+            end
+          end,
+          ["<C-c>"] = function(_)
+            if cmp.visible() then
+              cmp.abort()
+            else
+              -- Clear the current REPL line (Issue #10: C-c not clearing the line)
+              vim.api.nvim_set_current_line("")
+            end
+          end,
         }),
       })
     end,
