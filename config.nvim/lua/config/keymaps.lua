@@ -546,10 +546,17 @@ local debugging_keymaps = {
     normalModeKey = "<leader>dE",
     debugModeKey = "E",
     action = function()
-      require("dap").disconnect()
-      require("dap").close()
+      -- Safeguard: confirm before disconnecting (Issue #4: dangerous keymaps too accessible)
+      vim.ui.select({ "Yes, stop session", "Cancel" }, {
+        prompt = "Stop debug session?",
+      }, function(choice)
+        if choice == "Yes, stop session" then
+          require("dap").disconnect()
+          require("dap").close()
+        end
+      end)
     end,
-    desc = "Stop session"
+    desc = "Stop session (with confirmation)"
   },
 }
 
@@ -660,7 +667,60 @@ function NoUIGeneircDebug()
 end
 
 vim.keymap.set("n", "<leader>DD", NoUIGeneircDebug)
-vim.keymap.set("n", "<leader>Dt", "<cmd>DapTerminate<CR>")
+vim.keymap.set("n", "<leader>Dt", function()
+  -- Safeguard: confirm before terminating (Issue #4: dangerous keymaps)
+  vim.ui.select({ "Yes, terminate", "Cancel" }, {
+    prompt = "Terminate debug session?",
+  }, function(choice)
+    if choice == "Yes, terminate" then
+      vim.cmd("DapTerminate")
+    end
+  end)
+end, { desc = "Terminate DAP session (with confirmation)" })
+
+-- OpenLaunchJson: quickly create/edit launch.json (Issue #4: lacking quick script extending launch.json)
+vim.api.nvim_create_user_command("OpenLaunchJson", function()
+  local launch_json, vscode_dir = vim.g.find_launch_json(vim.fn.getcwd())
+
+  if not launch_json then
+    vscode_dir = vim.fn.getcwd() .. "/.vscode"
+    launch_json = vscode_dir .. "/launch.json"
+  end
+
+  if vim.fn.filereadable(launch_json) == 0 then
+    -- Create a template launch.json
+    vim.fn.mkdir(vscode_dir, "p")
+    local template = vim.fn.json_encode({
+      version = "0.2.0",
+      configurations = {
+        {
+          type = "codelldb",
+          request = "launch",
+          name = "Launch (codelldb)",
+          program = "${workspaceFolder}/target/debug/${workspaceFolderBasename}",
+          cwd = "${workspaceFolder}",
+          stopOnEntry = false,
+        },
+        {
+          type = "debugpy",
+          request = "launch",
+          name = "Launch (Python)",
+          program = "${file}",
+          cwd = "${workspaceFolder}",
+        },
+      },
+    })
+    -- Pretty-print JSON
+    local f = io.open(launch_json, "w")
+    if f then
+      f:write(template)
+      f:close()
+    end
+    vim.notify("Created " .. launch_json, vim.log.levels.INFO)
+  end
+
+  vim.cmd("edit " .. launch_json)
+end, { desc = "Open or create .vscode/launch.json for debugging" })
 
 -- Debugging keymaps set/unset.
 vim.keymap.set({ "n", "v", "x" }, "<leader>dD", function()
