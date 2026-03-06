@@ -84,7 +84,7 @@ vim.g.copilot_filetypes = {
   toml = false,
 }
 
-vim.opt.fillchars = "diff:╱,eob:~,fold: ,foldclose:,foldopen:,foldsep: "
+vim.opt.fillchars = "diff:╱,eob:~,fold: ,foldclose:,foldopen:,foldsep: "
 vim.g.debugging_status = "NoDebug"
 vim.g.recording_status = false
 vim.g.debugging_keymap = false
