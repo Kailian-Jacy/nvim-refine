@@ -204,7 +204,7 @@ vim.g.terminal_default_tmux_session_name = "nvim-attached"
 
 --- A helper function that returns the attached tmux client pids. It's a table since there could be multiple sessions attached.
 --- @return table<string>
-vim.g.__tmux_get_current_attached_cliend_pid = function()
+vim.g.__tmux_get_current_attached_client_pid = function()
   local result = vim.fn.system(
     "pstree -p " .. vim.fn.getpid() .. " | grep tmux | grep client | sed -E 's/.*[ |(]([0-9]+)[ |)].*/\\1/' "
   )

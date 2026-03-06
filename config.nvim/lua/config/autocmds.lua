@@ -52,19 +52,19 @@ vim.api.nvim_create_user_command("RunScript", function()
             "python"
           }
           local found = false
-          local python_intepreter = ""
+          local python_interpreter = ""
           for _, candidate in ipairs(candidates) do
             if vim.fn.executable(candidate) ~= 0 then
-              python_intepreter = candidate
+              python_interpreter = candidate
               found = true
               break
             end
           end
-          if not found or #python_intepreter == 0 then
+          if not found or #python_interpreter == 0 then
             vim.notify("no usable python intepreter.", vim.log.levels.ERROR)
             return ""
           end
-          return python_intepreter
+          return python_interpreter
         end,
 
         -- Content in template:
@@ -157,13 +157,13 @@ vim.api.nvim_create_user_command("RunScript", function()
 
   -- Register timeout. Default to be 3s.
   local timeout = 0
-  local timeout_cancidates = {
+  local timeout_candidates = {
     vim.g._runner_global_timeout or 0,
     runner.timeout or 0,
     filetype_runner[vim.bo.filetype].timeout or 0,
     3000
   }
-  for _, candidate in ipairs(timeout_cancidates) do
+  for _, candidate in ipairs(timeout_candidates) do
     if candidate and type(candidate) == "number" or candidate > 0 then
       timeout = candidate
     end
@@ -1366,7 +1366,7 @@ vim.api.nvim_create_autocmd("VimLeave", {
   callback = function()
     -- Detach from tmux shell.
     -- Try to detach from the subprocess.
-    local tmux_client_pid = vim.g.__tmux_get_current_attached_cliend_pid()
+    local tmux_client_pid = vim.g.__tmux_get_current_attached_client_pid()
     if tmux_client_pid and #tmux_client_pid > 0 then
       for _, pid in ipairs(tmux_client_pid) do
         if #pid > 0 then
