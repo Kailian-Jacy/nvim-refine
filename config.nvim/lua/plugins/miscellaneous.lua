@@ -297,6 +297,8 @@ return {
         enabled = true,
       },
       indent = { enabled = false },
+      -- Disable snacks notifications when noice.nvim is handling them.
+      -- noice.nvim provides a more responsive floating UI for messages/notifications.
       notify = { enabled = false },
       notifier = { enabled = false },
       quickfile = { enabled = false },
@@ -1310,7 +1312,7 @@ return {
           project = { enable = true, limit = 8, icon = 'your icon', label = '', action = 'Telescope find_files cwd=' },
           mru = { limit = 10, icon = 'your icon', label = '', cwd_only = false },
           shortcut = {
-            { desc = 'ó°?? Update', group = '@property', action = 'Lazy update', key = 'u' },
+            { desc = 'ï¿½?? Update', group = '@property', action = 'Lazy update', key = 'u' },
             {
               icon = '??? ',
               icon_hl = '@variable',
@@ -1326,7 +1328,7 @@ return {
               key = 'a',
             },
             {
-              desc = 'î¬? dotfiles',
+              desc = 'ï¿½? dotfiles',
               group = 'Number',
               action = 'Telescope dotfiles',
               key = 'd',
