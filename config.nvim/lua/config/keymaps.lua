@@ -377,9 +377,10 @@ local debugging_keymaps = {
     normalModeKey = "<leader>db",
     debugModeKey = "b",
     action = function()
-      require("dap").toggle_breakpoint()
+      -- Use persistent-breakpoints for toggle so breakpoints survive session restarts.
+      require("persistent-breakpoints.api").toggle_breakpoint()
     end,
-    desc = "Toggle breakpoint"
+    desc = "Toggle breakpoint (persistent)"
   },
   {
     normalModeKey = "<leader>dB",
