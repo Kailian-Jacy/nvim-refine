@@ -109,7 +109,7 @@ vim.g._env_os_type = get_os_type()
 -- Tmux helper
 --- A helper function that returns the attached tmux client pids.
 --- @return table<string>
-vim.g.__tmux_get_current_attached_cliend_pid = function()
+vim.g.__tmux_get_current_attached_client_pid = function()
   local result = vim.fn.system(
     "pstree -p " .. vim.fn.getpid() .. " | grep tmux | grep client | sed -E 's/.*[ |(]([0-9]+)[ |)].*/\\1/' "
   )
