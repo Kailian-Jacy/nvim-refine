@@ -8,6 +8,11 @@ return {
   },
   {
     "linrongbin16/gitlinker.nvim",
+    cmd = { "GitLink" },
+    keys = {
+      { "<leader>gl", "<cmd>GitLink<cr>", mode = { "n", "v" }, desc = "Copy git link" },
+      { "<leader>gL", "<cmd>GitLink!<cr>", mode = { "n", "v" }, desc = "Open git link in browser" },
+    },
     config = function ()
       require("gitlinker").setup({
         router = {
@@ -164,6 +169,7 @@ return {
     -- Give diff tab to nvim.
     -- DiffviewOpen oldCommit..newCommit to perform diff. Left is old, and right is new.
     "sindrets/diffview.nvim",
+    cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory" },
     keys = {
       {
         "<leader>sD",
@@ -172,7 +178,6 @@ return {
         desc = "n",
       },
     },
-    event = "VeryLazy",
     config = function()
       local actions = require("diffview.actions")
       require("diffview").setup({
