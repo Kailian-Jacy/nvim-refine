@@ -641,7 +641,14 @@ vim.api.nvim_create_user_command("NeovideNew", function()
 end, {})
 
 -- Search History
-vim.api.nvim_create_user_command("SearchHistory", Snacks.picker.search_history, {})
+vim.api.nvim_create_user_command("SearchHistory", function()
+  local ok, snacks = pcall(require, "snacks")
+  if ok and snacks.picker and snacks.picker.search_history then
+    snacks.picker.search_history()
+  else
+    vim.notify("Snacks.picker not available", vim.log.levels.WARN)
+  end
+end, {})
 
 -- Drop buf somewhere and reveal the last on this window.
 vim.api.nvim_create_user_command("ThrowAndReveal", function(opt)
