@@ -26,7 +26,7 @@ end, { desc = "run *_vimtest.lua" })
 -- Script runner.
 -- Possibly turn it into a standalone plugin later.
 vim.api.nvim_create_user_command("RunScript", function()
-    local uv = vim.uv or vim.loop
+    local uv = vim.uv
     ---@class runner_definition
     ---@field runner (fun(): string) | string | nil
     ---@field template fun(runner: string, text: string) | string
@@ -722,12 +722,12 @@ vim.api.nvim_create_user_command("Code", function(opt)
 
   if dir then
     vim.print(dir)
-    vim.loop.spawn(code, {
+    vim.uv.spawn(code, {
       args = { dir },
     })
   end
   if file then
-    vim.loop.spawn(code, {
+    vim.uv.spawn(code, {
       args = { file },
     })
   end
