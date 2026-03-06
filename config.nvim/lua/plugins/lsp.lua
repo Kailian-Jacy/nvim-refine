@@ -359,7 +359,7 @@ return {
       end
 
       vim.api.nvim_create_user_command("ConformFormat", function()
-        vim.g.format_behavior = vim.g.format_behavior or { default = "restricted" }
+        vim.g.format_behavior = vim.g.format_behavior or { default = "restrict" }
 
         local filetype = vim.bo.filetype
         local behavior = vim.g.format_behavior.default
