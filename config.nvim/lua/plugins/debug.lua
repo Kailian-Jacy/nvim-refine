@@ -180,7 +180,8 @@ return {
 
         -- When stopped, switch to scopes view for inspection
         pcall(function()
-          if require("dap-view").is_open() then
+          local dap_view_state = require("dap-view.state")
+          if dap_view_state.winnr and vim.api.nvim_win_is_valid(dap_view_state.winnr) then
             require("dap-view").jump_to_view("scopes")
           end
         end)
