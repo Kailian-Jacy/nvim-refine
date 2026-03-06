@@ -127,10 +127,15 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 })
 
 -- Macro recording related.
+local function _safe_lualine_refresh()
+  local ok, lualine = pcall(require, "lualine")
+  if ok then lualine.refresh() end
+end
+
 vim.api.nvim_create_autocmd("RecordingEnter", {
   callback = function()
     vim.g.recording_status = true
-    require("lualine").refresh()
+    _safe_lualine_refresh()
     vim.print_silent("Macro recording.")
   end,
 })
@@ -138,7 +143,7 @@ vim.api.nvim_create_autocmd("RecordingEnter", {
 vim.api.nvim_create_autocmd("RecordingLeave", {
   callback = function()
     vim.g.recording_status = false
-    require("lualine").refresh()
+    _safe_lualine_refresh()
     vim.print_silent("End recording.")
   end,
 })
@@ -212,7 +217,8 @@ vim.api.nvim_create_autocmd("BufRead", {
 -- Lint on save
 vim.api.nvim_create_autocmd({ "BufWritePost" }, {
   callback = function()
-    require("lint").try_lint()
+    local ok, l = pcall(require, "lint")
+    if ok then l.try_lint() end
   end,
 })
 
@@ -276,7 +282,9 @@ end
 vim.api.nvim_create_autocmd("TextYankPost", { callback = copy })
 
 -- disable barbecue (Context) showing atop of the window
-require("barbecue.ui").toggle(false)
+pcall(function()
+  require("barbecue.ui").toggle(false)
+end)
 
 -- Avante keymaps.
 vim.api.nvim_create_autocmd("FileType", {
