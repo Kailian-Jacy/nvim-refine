@@ -606,7 +606,7 @@ vim.g.nvim_dap_upmap = function()
     for _, v in pairs(vim.g.nvim_dap_noui_backup_keymap or {}) do
       if v.lhs == k then
         local nr = (v.noremap == 1)
-        local sl = (v.slient == 1)
+        local sl = (v.silent == 1)
         local exp = (v.expr == 1)
         local mode = v.mode
         local desc = v.desc or "dap noui keymap"
