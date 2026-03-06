@@ -31,12 +31,12 @@ return {
         -- Create symlink from link_source to package_path/package_name/package_name
         local package_binary = package_dir .. "/" .. package_name
         vim.fn.delete(package_binary) -- Remove if exists
-        vim.loop.fs_symlink(link_source, package_binary)
+        vim.uv.fs_symlink(link_source, package_binary)
 
         -- Create symlink from package binary to bin_path/package_name
         local bin_binary = bin_path .. "/" .. package_name
         vim.fn.delete(bin_binary) -- Remove if exists
-        vim.loop.fs_symlink(package_binary, bin_binary)
+        vim.uv.fs_symlink(package_binary, bin_binary)
 
         -- Make sure the binary is executable
         vim.fn.setfperm(package_binary, "rwxr-xr-x")
