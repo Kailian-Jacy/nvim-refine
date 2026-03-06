@@ -40,7 +40,7 @@ return {
             scopes = {
               keymap = "P",
               label = "Scopes [P]",
-              short_label = " [P]",
+              short_label = " [P]",
               action = function()
                 require("dap-view.views").switch_to_view("scopes")
               end,
@@ -56,7 +56,7 @@ return {
             sessions = {
                 keymap = "S", -- I ran out of mnemonics
                 label = "Sessions [S]",
-                short_label = " [S]",
+                short_label = " [S]",
                 action = function()
                     require("dap-view.views").switch_to_view("sessions")
                 end,
@@ -64,6 +64,19 @@ return {
           },
           default_section = "scopes",
         },
+        -- Terminal/console configuration
+        windows = {
+          terminal = {
+            -- Position: bottom split for terminal output
+            position = "right",
+            -- Height of the terminal window
+            size = 0.35,
+            -- Hide the terminal when not in a debug session
+            hide = true,
+          },
+        },
+        -- Automatically open dap-view when debug session starts
+        switchbuf = "uselast",
       })
     end
   },
@@ -115,17 +128,6 @@ return {
         end,
         desc = "Breakpoint Condition",
       },
-      -- running control
-      --[[{ "<leader>dc", function() require("dap").continue() end, desc = "Continue" },
-      { "<leader>dC", function() require("dap").run_to_cursor() end, desc = "Run to Cursor" },
-      { "<leader>dt", function() require("dap").terminate() end, desc = "Terminate" },
-      { "<leader>di", function() require("dap").step_into() end, desc = "Step Into" },
-      { "<leader>dp", function() require("dap").pause() end, desc = "Pause" },
-      { "<leader>do", function() require("dap").step_out() end, desc = "Step Out" },
-      { "<leader>dO", function() require("dap").step_over() end, desc = "Step Over" },]]
-      -- { "<leader>dg", function() require("dap").goto_() end, desc = "Go to Line (No Execute)" },
-      --[[{ "<leader>dj", function() require("dap").down() end, desc = "Down" },
-      { "<leader>dk", function() require("dap").up() end, desc = "Up" },]]
       -- starting.
       {
         "<leader>Dl",
@@ -154,29 +156,88 @@ return {
     },
     config = function()
       local dap = require("dap")
-      -- Setting up rust debugger using codelldb.
-      -- As rustecean-vim said, use codelldb instead of raw lldb.
-      -- codelldb is a vscode plugin that enables type: "lldb" in launch.json
-      -- Failed to setup rust debugging configuration finally. Use :RustLsp debuggables to debug normal cargo project.
-      --    As post *https://github.com/mfussenegger/nvim-dap/discussions/671* said, no such thing as nvim-dap-rust,
-      --    It's maintained by rusteceanvim, but his doc seems to be outdated and causing error.
-      --    So problem about rust vscode compatibility seems unsolved.
 
-      -- setup keymap before debug session begins.
-      dap.listeners.after["event_initialized"]["nvim-dap-noui"] = function(_, _)
-        vim.print_silent("Debug Session intialized ")
+      -- ============================================================
+      -- Auto-open/close dap-view with debug sessions
+      -- ============================================================
+
+      -- Open dap-view when debug session initializes
+      dap.listeners.after["event_initialized"]["dap-view-auto"] = function(_, _)
+        vim.print_silent("Debug Session initialized")
         vim.g.debugging_status = "DebugOthers"
         require("lualine").refresh()
-        -- NoUIKeyMap()
-      end
-      -- dap.listeners.after.attach["nvim-dap-noui"] = function (_, _)
-      --   vim.print_silent("Debug Session Attached to process.")
-      -- end
-      -- dap.listeners.after.launch["nvim-dap-noui"] = function (_, _)
-      --   vim.print_silent("Debug Session Launched.")
-      -- end
 
-      -- Customized helper functions.
+        -- Auto-open dap-view on session start
+        pcall(function()
+          require("dap-view").open()
+        end)
+      end
+
+      -- Track stopped state
+      dap.listeners.before["event_stopped"]["nvim-dap-noui"] = function(_, _)
+        vim.g.debugging_status = "Stopped"
+        require("lualine").refresh()
+
+        -- When stopped, switch to scopes view for inspection
+        pcall(function()
+          if require("dap-view").is_open() then
+            require("dap-view").jump_to_view("scopes")
+          end
+        end)
+      end
+
+      dap.listeners.before["event_continued"]["nvim-dap-noui"] = function(_, _)
+        vim.g.debugging_status = "Running"
+        require("lualine").refresh()
+      end
+
+      -- Close dap-view when all sessions end
+      dap.listeners.before.event_terminated["nvim-dap-noui"] = function(_, _)
+        vim.g.debugging_status = "NoDebug"
+        vim.print_silent("Debug Session Terminated.")
+        require("lualine").refresh()
+
+        -- Auto-close dap-view when last session ends
+        vim.defer_fn(function()
+          if not dap.session() then
+            pcall(function()
+              require("dap-view").close()
+            end)
+          end
+        end, 500)
+      end
+
+      dap.listeners.before.event_exited["nvim-dap-noui"] = function(_, _)
+        vim.g.debugging_status = "NoDebug"
+        vim.print_silent("Debug Session Exited.")
+        require("lualine").refresh()
+
+        vim.defer_fn(function()
+          if not dap.session() then
+            pcall(function()
+              require("dap-view").close()
+            end)
+          end
+        end, 500)
+      end
+
+      dap.listeners.before.disconnect["nvim-dap-noui"] = function(_, _)
+        vim.g.debugging_status = "NoDebug"
+        vim.print_silent("Debug Session Disconnected.")
+        require("lualine").refresh()
+
+        vim.defer_fn(function()
+          if not dap.session() then
+            pcall(function()
+              require("dap-view").close()
+            end)
+          end
+        end, 500)
+      end
+
+      -- ============================================================
+      -- Customized helper functions
+      -- ============================================================
 
       ---@return table<string, integer>
       vim.g.debugging_session_status = function ()
@@ -193,58 +254,9 @@ return {
         return {stopped_session = stopped_session, running_session = running_session}
       end
 
-      -- Starting.
-      dap.listeners.before["event_stopped"]["nvim-dap-noui"] = function(_, _)
-        vim.g.debugging_status = "Stopped"
-        require("lualine").refresh()
-      end
-      dap.listeners.before["event_continued"]["nvim-dap-noui"] = function(_, _)
-        vim.g.debugging_status = "Running"
-        require("lualine").refresh()
-      end
-
-      -- Ending.
-      dap.listeners.before.event_terminated["nvim-dap-noui"] = function(_, _)
-        vim.g.debugging_status = "NoDebug"
-        vim.print_silent("Debug Session Terminated.")
-        require("lualine").refresh()
-        -- NoUIUnmap()
-      end
-      dap.listeners.before.event_exited["nvim-dap-noui"] = function(_, _)
-        vim.g.debugging_status = "NoDebug"
-        vim.print_silent("Debug Session Exited.")
-        require("lualine").refresh()
-        -- NoUIUnmap()
-      end
-      dap.listeners.before.disconnect["nvim-dap-noui"] = function(_, _)
-        vim.g.debugging_status = "NoDebug"
-        vim.print_silent("Debug Session Disconnected.")
-        require("lualine").refresh()
-        -- NoUIUnmap()
-      end
-
-      -- dap.listeners.on_session["nvim-dap-noui"] = function(old_session, new_session)
-      --   -- Error code. new session is nil does not mean ending.
-      --   if new_session == nil then
-      --     -- Session change on last session ends..
-      --     vim.g.debugging_status = "NoDebug"
-      --     vim.print_silent("Debug Session ends.")
-      --     require("lualine").refresh()
-      --   elseif old_session  == nil then
-      --     -- Session change on last session ends..
-      --     vim.g.debugging_status = "DebugOthers"
-      --     vim.print_silent("Debug Session Started.")
-      --     require("lualine").refresh()
-      --   else
-      --     -- Switching session.
-      --     vim.g.debugging_status = "DebugOthers"
-      --     vim.print_silent("Debug Session Switched.")
-      --     require("lualine").refresh()
-      --   end
-      --   -- NoUIUnmap()
-      -- end
-      -- dap.listeners.before['event_terminated']['nvim-dap-noui'] = dap.listeners.before['event_stopped']['nvim-dap-noui']
-      -- Setup windows location and side when debugging with terminal:
+      -- ============================================================
+      -- DAP Adapters Registration
+      -- ============================================================
 
       ---@param name string
       ---@param exe_name? string
@@ -262,7 +274,6 @@ return {
       dap_register_if_executable("cppdbg", "OpenDebugAD7")
       dap_register_if_executable("codelldb")
       dap_register_if_executable("gopls")
-      -- TODO: Not tried yet..
       dap_register_if_executable("sh", "bash-debug-adapter")
 
       -- As debugpy is sometimes provided by venv, when switching venv, availability of debugpy may change.
@@ -277,7 +288,9 @@ return {
         name = "debugpy",
       }
 
+      -- ============================================================
       -- Lua debug neovim itself configuration
+      -- ============================================================
       -- 1. Run require"osv".launch({port = 8086}) before debugging.
       -- 2. Navigate to lua file and start debugging.
       dap.adapters.neovimlua = function(callback, config)
@@ -290,6 +303,34 @@ return {
           name = "Attach to running Neovim instance",
         }
       }
+
+      -- ============================================================
+      -- Terminal configuration for dap
+      -- ============================================================
+      -- Configure the integrated terminal to open in a split
+      dap.defaults.fallback.terminal_win_cmd = "belowright 15new"
+      -- Force external terminal when needed
+      dap.defaults.fallback.force_external_terminal = false
+      -- Focus the main editor (not the terminal) after launch
+      dap.defaults.fallback.focus_terminal = false
+
+      -- ============================================================
+      -- Sign customization for breakpoints
+      -- ============================================================
+      vim.fn.sign_define("DapBreakpoint", { text = "●", texthl = "DapBreakpoint", linehl = "", numhl = "" })
+      vim.fn.sign_define("DapBreakpointCondition", { text = "◆", texthl = "DapBreakpointCondition", linehl = "", numhl = "" })
+      vim.fn.sign_define("DapBreakpointRejected", { text = "○", texthl = "DapBreakpointRejected", linehl = "", numhl = "" })
+      vim.fn.sign_define("DapStopped", { text = "▶", texthl = "DapStopped", linehl = "debugPc", numhl = "" })
+      vim.fn.sign_define("DapLogPoint", { text = "◇", texthl = "DapLogPoint", linehl = "", numhl = "" })
+
+      -- ============================================================
+      -- Highlight groups for DAP signs
+      -- ============================================================
+      vim.api.nvim_set_hl(0, "DapBreakpoint", { fg = "#FF6B6B" })
+      vim.api.nvim_set_hl(0, "DapBreakpointCondition", { fg = "#FFD93D" })
+      vim.api.nvim_set_hl(0, "DapBreakpointRejected", { fg = "#6C757D" })
+      vim.api.nvim_set_hl(0, "DapStopped", { fg = "#6BCB77" })
+      vim.api.nvim_set_hl(0, "DapLogPoint", { fg = "#4ECDC4" })
     end,
   },
   --[[{
