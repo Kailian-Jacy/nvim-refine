@@ -164,36 +164,44 @@ return {
       { "nvim-treesitter/nvim-treesitter" },
     },
     config = function()
-      require("nvim-treesitter.configs").setup({
-        textobjects = {
-          select = {
-            enable = true,
-            lookahead = true,
-            keymaps = {
-              -- You can use the capture groups defined in textobjects.scm
-              ["af"] = "@function.outer",
-              ["if"] = "@function.inner",
-              ["ac"] = "@class.outer",
-              ["ic"] = "@class.inner",
+      -- nvim-treesitter.configs is deprecated in newer treesitter versions;
+      -- use pcall to avoid hard errors and fall back to vim.treesitter built-ins.
+      local ok, ts_configs = pcall(require, "nvim-treesitter.configs")
+      if ok then
+        ts_configs.setup({
+          textobjects = {
+            select = {
+              enable = true,
+              lookahead = true,
+              keymaps = {
+                -- You can use the capture groups defined in textobjects.scm
+                ["af"] = "@function.outer",
+                ["if"] = "@function.inner",
+                ["ac"] = "@class.outer",
+                ["ic"] = "@class.inner",
+              },
+              include_surrounding_whitespace = true,
             },
-            include_surrounding_whitespace = true,
           },
-        },
-      })
-      require('nvim-treesitter.configs').setup({
-        highlight = {
-          enable = true,
-          additional_vim_regex_highlighting = true,
-        },
-        incremental_selection = {
-          enable = true,
-          keymaps = {
-            init_selection = '<Tab>',
-            node_incremental = '<TAB>',
-            node_decremental = '<S-TAB>',
+        })
+        ts_configs.setup({
+          highlight = {
+            enable = true,
+            additional_vim_regex_highlighting = true,
+          },
+          incremental_selection = {
+            enable = true,
+            keymaps = {
+              init_selection = '<Tab>',
+              node_incremental = '<TAB>',
+              node_decremental = '<S-TAB>',
+            }
           }
-        }
-      })
+        })
+      else
+        -- Newer treesitter: configure via vim.treesitter directly
+        vim.treesitter.start = vim.treesitter.start or function() end
+      end
     end,
   },
   {
