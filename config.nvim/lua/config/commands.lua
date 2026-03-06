@@ -43,19 +43,19 @@ vim.api.nvim_create_user_command("RunScript", function()
             "python"
           }
           local found = false
-          local python_intepreter = ""
+          local python_interpreter = ""
           for _, candidate in ipairs(candidates) do
             if vim.fn.executable(candidate) ~= 0 then
-              python_intepreter = candidate
+              python_interpreter = candidate
               found = true
               break
             end
           end
-          if not found or #python_intepreter == 0 then
-            vim.notify("no usable python intepreter.", vim.log.levels.ERROR)
+          if not found or #python_interpreter == 0 then
+            vim.notify("no usable python interpreter.", vim.log.levels.ERROR)
             return ""
           end
-          return python_intepreter
+          return python_interpreter
         end,
 
         -- Content in template:
