@@ -98,7 +98,7 @@ return {
         if #clients > 0 then
           add(string.format("🔧 LSP clients (%d active):", #clients))
           for _, client in ipairs(clients) do
-            local bufs = vim.lsp.get_buffers_by_client_id(client.id)
+            local bufs = vim.tbl_keys(client.attached_buffers or {})
             local status = "running"
             -- Check if the client process is still alive
             if client.is_stopped and client:is_stopped() then
@@ -188,7 +188,7 @@ return {
           end
 
           -- Attached buffers
-          local bufs = vim.lsp.get_buffers_by_client_id(client.id)
+          local bufs = vim.tbl_keys(client.attached_buffers or {})
           if #bufs > 0 then
             local buf_names = {}
             for _, bufnr in ipairs(bufs) do
