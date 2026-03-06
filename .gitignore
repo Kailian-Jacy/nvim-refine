@@ -1,1 +1,14 @@
+# Local configuration (user-specific, not synced)
 config.nvim/lua/config/local.lua
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor swap/backup files
+*.swp
+*.swo
+*~
+
+# Neovim
+config.nvim/plugin/packer_compiled.lua
