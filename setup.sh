@@ -6,6 +6,17 @@ set -e
 #   Options 
 ###############################################
 
+# OS detection (must be before platform-specific options)
+OS="Linux"
+if [[ "$(uname)" == "Darwin" ]]; then
+  OS="MacOS"
+elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
+  OS="Linux"
+else
+  echo "Unsupported OS. Exit."
+  exit 1
+fi
+
 # Basic.
 DEFAULT_SHELL=/usr/bin/zsh
 NVIM_CONF_LINK=~/.config/nvim
@@ -14,9 +25,9 @@ NEOVIDE_CONF_LINK=~/.config/neovide/config.toml
 NVIM_INSTALL_PATH=$HOME/.local/nvim/
 DEFAULT_ENV_FILE_PATH=~/.zprofile
 INSTALL_DEPENDENCIES="git curl " # Everything relies on them...
-INSTALL_DEPENDENCIES+="cmake make gcc " # requried by luasnip, ray-x and treesitter.
+INSTALL_DEPENDENCIES+="cmake make gcc " # required by luasnip, ray-x and treesitter.
 INSTALL_DEPENDENCIES+="tmux lazygit zoxide " # handy cmd tools.
-INSTALL_DEPENDENCIES+="fzf ripgrep fd " # buildin searchs.
+INSTALL_DEPENDENCIES+="fzf ripgrep fd " # builtin searches.
 INSTALL_DEPENDENCIES+="npm node " # required by copilot.
 INSTALL_DEPENDENCIES+="unzip zip lua@5.4 luarocks "
 INSTALL_DEPENDENCIES+="sqlite " # required by bookmarks.nvim
@@ -34,14 +45,6 @@ else
 fi
 
 # generated options.
-OS="Linux"
-if [[ "$(uname)" == "Darwin" ]]; then
-  OS="MacOS"
-elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
-  OS="Linux"
-else
-  echo "Unsupported OS. Exit."
-fi
 CURRENT_ABS=$(realpath $0)
 CURRENT_BASEDIR=$(dirname $CURRENT_ABS)
 DEFAULT_SHELL_RC_FILENAME=".$(basename "$DEFAULT_SHELL")rc"
@@ -135,7 +138,6 @@ function backup_and_link() {
 backup_and_link "$CURRENT_BASEDIR/config.nvim/" "${NVIM_CONF_LINK}"
 backup_and_link "$CURRENT_BASEDIR/config.others/tmux.conf" "${TMUX_CONF_LINK}" # Corrected target
 backup_and_link "$CURRENT_BASEDIR/config.others/neovide.config.toml" "${NEOVIDE_CONF_LINK}"
-backup_and_link "$CURRENT_BASEDIR/config.nvim/snip" "${SNIPPET_LINK}" || [ $CONTINUE_ON_ERROR = true ]
 
 # if INSTALL_FONT_PATH is set, install Nerd fonts
 if [ -n "$INSTALL_FONT_PATH" ]; then
