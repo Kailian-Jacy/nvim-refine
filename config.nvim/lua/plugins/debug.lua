@@ -1,10 +1,64 @@
 return {
   {
+    -- Persistent breakpoints: save/restore breakpoints across sessions.
+    -- Addresses nvim-config#9: Persistent breakpoints.
     "Kailian-Jacy/persistent-breakpoints.nvim",
+    dependencies = { "mfussenegger/nvim-dap" },
+    lazy = false,
+    keys = {
+      -- Override default breakpoint toggles to use persistent versions.
+      {
+        "<leader>xb",
+        function()
+          require("persistent-breakpoints.api").toggle_breakpoint()
+        end,
+        desc = "Toggle Breakpoint (persistent)",
+      },
+      {
+        "<leader>xB",
+        function()
+          require("persistent-breakpoints.api").set_conditional_breakpoint()
+        end,
+        desc = "Conditional Breakpoint (persistent)",
+      },
+      {
+        "<leader>xd",
+        function()
+          require("persistent-breakpoints.api").clear_all_breakpoints()
+        end,
+        desc = "Clear All Breakpoints",
+      },
+      {
+        "<leader>xl",
+        function()
+          -- Force reload breakpoints for all loaded buffers.
+          require("persistent-breakpoints.api").reload_breakpoints()
+          vim.notify("Breakpoints reloaded from disk.", vim.log.levels.INFO)
+        end,
+        desc = "Reload Breakpoints from disk",
+      },
+    },
     opts = {
+      -- Auto-load breakpoints when a buffer is opened.
       load_breakpoints_event = { "BufReadPost" },
+      -- Always reload even if breakpoints were set manually in this session.
       always_reload = true,
-    }
+      -- Save breakpoints to project-local path (default: vim.fn.stdpath("data")).
+      -- This makes breakpoints per-project.
+      save_dir = vim.fn.stdpath("data") .. "/breakpoints",
+    },
+    config = function(_, opts)
+      require("persistent-breakpoints").setup(opts)
+
+      -- Auto-save breakpoints when they are modified.
+      -- This covers both add and remove operations.
+      vim.api.nvim_create_autocmd({ "User" }, {
+        pattern = "PersistentBreakpointsSaved",
+        callback = function()
+          vim.print_silent("Breakpoints saved.")
+        end,
+      })
+    end,
   },
   {
     "igorlfs/nvim-dap-view",
@@ -99,18 +153,29 @@ return {
     lazy = true,
     keys = {
       -- { "<leader>d", "", desc = "+debug", mode = {"n", "v"} },
-      -- break points.
+      -- break points: use persistent-breakpoints.nvim instead (see above).
+      -- These keymaps are kept as fallback if persistent-breakpoints is not loaded.
       {
         "<leader>xb",
         function()
-          require("dap").toggle_breakpoint()
+          local ok, pb = pcall(require, "persistent-breakpoints.api")
+          if ok then
+            pb.toggle_breakpoint()
+          else
+            require("dap").toggle_breakpoint()
+          end
         end,
         desc = "Toggle Breakpoint",
       },
       {
         "<leader>xB",
         function()
-          require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
+          local ok, pb = pcall(require, "persistent-breakpoints.api")
+          if ok then
+            pb.set_conditional_breakpoint()
+          else
+            require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
+          end
         end,
         desc = "Breakpoint Condition",
       },
