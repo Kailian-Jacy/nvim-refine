@@ -15,32 +15,49 @@ A Neovim setup with extremely neat UI, optimized for productivity.
 - **Snippets**: LuaSnip with VSCode snippet support
 - **Remote**: Neovide remote server support via Docker
 
-## Requirements
-
-- Neovim 0.10+ (0.11+ recommended)
-- Git, curl
-- [Homebrew](https://brew.sh/) (installed automatically by setup.sh)
-
 ## Installation
 
 ```bash
-git clone https://github.com/Kailian-Jacy/nvim-refine.git \
+git clone https://github.com/Kailian-Jacy/nvim-refine \
     && cd nvim-refine \
     && chmod +x ./setup.sh \
     && ./setup.sh
 ```
 
-## Docker (Remote Neovim Server)
+### Install Modes
+
+```bash
+./setup.sh --full     # Full installation (default): all tools, fonts, LSPs
+./setup.sh --minimal  # Core neovim only: config + treesitter build deps
+./setup.sh --docker   # Optimized for containers: apt + binary downloads, no fonts
+```
+
+### Docker
 
 ```bash
 docker build -t nvim-refine .
-docker run -p 9099:9099 nvim-refine
+docker run --rm -it -p 9099:9099 nvim-refine
 ```
+
+The Dockerfile auto-detects container environment and uses `apt` + direct binary downloads instead of Homebrew.
 
 Then connect from Neovide or any Neovim client:
 ```bash
 nvim --server localhost:9099 --remote-ui
 ```
+
+### Package Manager Strategy
+
+| Environment | Package Manager | Notes |
+|---|---|---|
+| macOS | Homebrew | Standard, uses pre-built bottles |
+| Linux (user) | Homebrew | Cross-platform consistency |
+| Linux (root/Docker) | apt + binaries | Homebrew refuses root; apt is faster in containers |
+
+### Requirements
+
+- Neovim 0.11+ (installed automatically by setup.sh)
+- zsh (used as default shell)
 
 ## Configuration
 
@@ -49,13 +66,6 @@ Copy from the template:
 
 ```bash
 cp config.nvim/lua/config/local.template.lua config.nvim/lua/config/local.lua
-```
-
-Set API keys in `~/.zprofile`:
-```bash
-export OPENROUTER_API_KEY="your-key"
-export DEEPSEEK_API_KEY="your-key"
-export DEEPSEEK_INTERNAL_API_KEY="your-key"
 ```
 
 ## Key Mappings
