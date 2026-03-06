@@ -2,7 +2,7 @@
 -- It will not be synchronized between git repos.
 -- Rename this file to local.lua to make it take effect.
 
-M = {}
+local M = {}
 
 local modules = {}
 
