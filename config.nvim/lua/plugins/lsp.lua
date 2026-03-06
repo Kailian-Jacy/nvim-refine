@@ -384,14 +384,13 @@ return {
             }
           else
             vim.notify("LSP: No parser available for current buffer", vim.log.levels.WARN)
-            return
+            return nil, 0
           end
 
           local node = ts_utils.get_node_at_cursor()
 
           if node == nil then
-            vim.print("node is nil")
-            return 0
+            return nil, 0
           end
 
           local start = node:start()
@@ -403,12 +402,14 @@ return {
         -- Restrict mode selection size.
         if (behavior == "restrict" and vim.fn.mode() == "n") then
           local node, line_cnt = get_select_line_cnt()
-          -- Restrict selection. If it's more than certain number of lines, skip formatting.
-          if vim.g.max_silent_format_line_cnt and vim.g.max_silent_format_line_cnt < line_cnt then
+          if not node or not line_cnt then
+            -- No treesitter node found, fall through to format entire buffer
+          elseif vim.g.max_silent_format_line_cnt and vim.g.max_silent_format_line_cnt > 0 and line_cnt > vim.g.max_silent_format_line_cnt then
             return
+          else
+            -- Minimal selection
+            require("nvim-treesitter.ts_utils").update_selection(vim.api.nvim_get_current_buf(), node, "linewise")
           end
-          -- Minimal selection
-          require("nvim-treesitter.ts_utils").update_selection(vim.api.nvim_get_current_buf(), node, "linewise")
         end
         require("conform").format({ async = true, lsp_format = "fallback" }, function(err)
           if not err then
