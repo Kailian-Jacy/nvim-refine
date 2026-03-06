@@ -63,6 +63,8 @@ vim.g.maplocalleader = "\\"
 -- UI related.
 vim.cmd([[ set laststatus=3 ]])     -- Global lualine across each windows.
 vim.cmd([[ set signcolumn=yes:1 ]]) -- Constant status column indentation.
+-- cmdheight=0 works well with noice.nvim which provides a floating cmdline.
+-- noshowmode/noruler/noshowcmd reduce UI clutter since noice handles messages.
 vim.cmd([[ set cmdheight=0 noshowmode noruler noshowcmd ]])
 
 -- Highlighting Source.
