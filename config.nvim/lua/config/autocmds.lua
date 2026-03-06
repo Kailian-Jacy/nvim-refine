@@ -298,3 +298,64 @@ vim.api.nvim_create_autocmd("FileType", {
     )
   end,
 })
+
+-- GitInfo command: quick summary of current git state (Issue #13: scriptlize git info for workflow)
+vim.api.nvim_create_user_command("GitInfo", function()
+  local function run(cmd)
+    return vim.fn.trim(vim.fn.system(cmd .. " 2>/dev/null"))
+  end
+
+  local branch = run("git rev-parse --abbrev-ref HEAD")
+  if branch == "" or vim.v.shell_error ~= 0 then
+    vim.notify("Not in a git repository", vim.log.levels.WARN)
+    return
+  end
+
+  local lines = { "Git Info:" }
+  table.insert(lines, "  Branch: " .. branch)
+
+  -- Ahead/behind upstream
+  local ab = run("git rev-list --count --left-right @{upstream}...HEAD")
+  if ab ~= "" then
+    local behind, ahead = ab:match("(%d+)%s+(%d+)")
+    if behind and ahead then
+      table.insert(lines, "  Ahead: " .. ahead .. "  Behind: " .. behind)
+    end
+  end
+
+  -- Stash count
+  local stash = run("git stash list | wc -l")
+  if stash ~= "" and stash ~= "0" then
+    table.insert(lines, "  Stashes: " .. stash)
+  end
+
+  -- File status counts
+  local status = run("git status --porcelain")
+  if status ~= "" then
+    local staged, unstaged, untracked = 0, 0, 0
+    for line in status:gmatch("[^\n]+") do
+      local x, y = line:sub(1, 1), line:sub(2, 2)
+      if x == "?" then
+        untracked = untracked + 1
+      else
+        if x ~= " " and x ~= "?" then staged = staged + 1 end
+        if y ~= " " and y ~= "?" then unstaged = unstaged + 1 end
+      end
+    end
+    table.insert(lines, "  Staged: " .. staged .. "  Unstaged: " .. unstaged .. "  Untracked: " .. untracked)
+  else
+    table.insert(lines, "  Working tree clean")
+  end
+
+  -- Merge/rebase/cherry-pick state
+  local git_dir = run("git rev-parse --git-dir")
+  if vim.fn.filereadable(git_dir .. "/MERGE_HEAD") == 1 then
+    table.insert(lines, "  State: MERGING")
+  elseif vim.fn.isdirectory(git_dir .. "/rebase-merge") == 1 or vim.fn.isdirectory(git_dir .. "/rebase-apply") == 1 then
+    table.insert(lines, "  State: REBASING")
+  elseif vim.fn.filereadable(git_dir .. "/CHERRY_PICK_HEAD") == 1 then
+    table.insert(lines, "  State: CHERRY-PICKING")
+  end
+
+  vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO)
+end, { desc = "Show git repository status summary" })
