@@ -1186,8 +1186,6 @@ return {
     opts = { use_diagnostic_signs = true },
   },
 
-  -- telescope.nvim removed: replaced by Snacks picker (see issue #45)
-
   {
     "okuuva/auto-save.nvim",
     event = { "InsertLeave", "TextChanged" },

@@ -235,14 +235,6 @@ vim.keymap.set(
 
 -- search
 vim.keymap.set("v", "/", '"fy/\\V<C-R>f<CR>')
--- vim.keymap.set(
---   "v",
---   "<leader>/",
---   require("telescope-live-grep-args.shortcuts").grep_visual_selection,
---   { noremap = true }
--- )
--- nnoremap <leader>/ <cmd>Telescope live_grep<cr>
--- vnoremap <leader>/ "zy:Telescope live_grep default_text=<C-r>z<cr>
 vim.keymap.set("n", "gh", function()
   local winid = require("ufo").peekFoldedLinesUnderCursor()
   if not winid then
@@ -783,13 +775,6 @@ local cmd_mappings = {
     modes = { "n", "v" },
     description = "List directory on current file base dir.",
   },
-  -- TODO: Directory from the current opened buffer.
-  -- {
-  --   cmdKeymap = "<D-E>",
-  --   leaderKeymap = "<leader>ee",
-  --   modes = { "n", "i" },
-  --   description = "Telescope directory on Working directory.",
-  -- },
   { cmdKeymap = "<D-f>", leaderKeymap = "<leader>ff", modes = { "n", "v" }, description = "List all files." },
   -- { cmdKeymap = "<D-F>", leaderKeymap = "<leader>fF", modes = { "n" }, description = "Search in the working directory" },
   -- Git
@@ -892,7 +877,7 @@ local cmd_mappings = {
     modes = { "t" },
     description = "Reset terminal in tmux.",
   },
-  -- Telescope recover.
+  -- Resume last picker.
   { cmdKeymap = "<D-T>", leaderKeymap = "<leader>tT", modes = { "n" }, description = "Reshow the last list" },
   { cmdKeymap = "<D-v>", leaderKeymap = "<leader>ps", modes = { "n", "v" }, description = "Paste from clipboard" },
   -- buffer/Window closing.

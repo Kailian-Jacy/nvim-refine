@@ -12,7 +12,6 @@ return {
     -- event = "BufEnter *.py" ,
     dependencies = {
       "neovim/nvim-lspconfig",
-      -- "nvim-telescope/telescope.nvim",
       "mfussenegger/nvim-dap-python",
     },
     -- Selector is not needed except wanting to point

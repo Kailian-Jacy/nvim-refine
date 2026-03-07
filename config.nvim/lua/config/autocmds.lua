@@ -280,8 +280,6 @@ end
 
 vim.api.nvim_create_autocmd("TextYankPost", { callback = copy })
 
--- barbecue.nvim removed (issue #45)
-
 -- Avante keymaps.
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "Avante" },

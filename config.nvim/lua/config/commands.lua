@@ -775,8 +775,6 @@ vim.api.nvim_create_user_command("Cd", function(opts)
   vim.cmd("pwd")
 end, { nargs = "?" })
 
--- TelescopeAutoCommands removed: telescope.nvim was removed (issue #45)
-
 -- Lint
 local function lint()
   require("lint").try_lint()

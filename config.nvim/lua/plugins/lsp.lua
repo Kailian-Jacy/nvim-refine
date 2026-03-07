@@ -434,6 +434,16 @@ return {
     end,
   },
   {
+    -- Standalone nvim-navic: provides LSP-based breadcrumb context (issue #45).
+    "SmiteshP/nvim-navic",
+    lazy = true,
+    opts = {
+      lsp = {
+        auto_attach = true,
+      },
+    },
+  },
+  {
     "stevearc/aerial.nvim",
     keys = {
       {

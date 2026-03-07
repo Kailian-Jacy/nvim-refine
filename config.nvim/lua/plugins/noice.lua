@@ -173,12 +173,35 @@ return {
         },
       },
     },
+    init = function()
+      -- Add a silent print (that doesn't leave history) as the old one.
+      vim.print_silent = vim.print
+      -- Integrate the older vim.print into the new noice pipeline.
+      -- Without this, vim.print() can only be seen from ":messages".
+      vim.print = function(...)
+        for _, value in ipairs({ ... }) do
+          vim.notify("[vim.print] " .. vim.inspect(value), vim.log.levels.INFO)
+        end
+      end
+    end,
     config = function(_, opts)
       require("noice").setup(opts)
 
-      -- Since noice handles messages, we can enable snacks.notify
-      -- as a fallback renderer or disable it to avoid conflicts.
-      -- noice.nvim takes priority over snacks.notifier when both are loaded.
+      -- FileType autocmd for noice buffers: enable gf to jump to file under cursor
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "noice",
+        callback = function()
+          vim.keymap.set("n", "gf", function()
+            local f = vim.fn.findfile(vim.fn.expand("<cfile>"), "**")
+            if f == "" then
+              vim.print_silent("no file under cursor")
+            else
+              vim.cmd("close")
+              vim.cmd("e " .. f)
+            end
+          end, { buffer = true })
+        end,
+      })
     end,
   },
 }

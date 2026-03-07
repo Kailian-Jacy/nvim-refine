@@ -201,7 +201,6 @@ return {
         desc = "Run Last",
       },
       -- { "<leader>Da", function() require("dap").continue({ before = get_args }) end, desc = "Run with Args" },
-      -- To be moved to telescope in the future.
       {
         "<leader>dr",
         function()
@@ -624,11 +623,4 @@ return {
       "mfussenegger/nvim-dap", "nvim-neotest/nvim-nio"
     }
   },]]
-  -- {
-  --   -- "nvim-telescope/telescope-dap.nvim",
-  --   "Kailian-Jacy/telescope-dap.nvim",
-  --   config = function()
-  --     require("telescope").load_extension("dap")
-  --   end,
-  -- },
 }

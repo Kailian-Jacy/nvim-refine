@@ -160,7 +160,7 @@ return {
               fallback()
             end
           end),
-          -- aligned with nvim screen shift and telescope previews shift.
+          -- aligned with nvim screen shift and previews shift.
           ["<C-u>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "v", "n" }),
           ["<C-d>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "v", "n" }),
           -- cancel suggestion.
