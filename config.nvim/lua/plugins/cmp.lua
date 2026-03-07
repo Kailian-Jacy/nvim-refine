@@ -8,11 +8,7 @@ return {
   {
     "onsails/lspkind.nvim",
   },
-  {
-    "tzachar/cmp-tabnine",
-    build = "./install.sh",
-    dependencies = "hrsh7th/nvim-cmp",
-  },
+  -- cmp-tabnine removed: was disabled (Issue #45)
   {
     "hrsh7th/nvim-cmp",
     dependencies = {
@@ -313,10 +309,7 @@ return {
           --     end,
           --   },
           -- },
-          {
-            name = "cmp_tabnine",
-            priority = 70,
-          },
+          -- cmp_tabnine source removed (Issue #45)
           {
             max_item_count = 7,
           },

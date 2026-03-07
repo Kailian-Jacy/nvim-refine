@@ -1,6 +1,7 @@
 -- Floating window solution: noice.nvim
 -- Replaces default cmdline, messages, and notifications with floating UI.
 -- Addresses nvim-config#6: A more efficient, powerful and responsive floating window solution.
+-- Consolidated from theme.lua and noice.lua (Issue #45).
 return {
   {
     "folke/noice.nvim",
@@ -10,6 +11,17 @@ return {
       -- Optional: better notification rendering (already used by snacks, keep as fallback)
       -- "rcarriga/nvim-notify",
     },
+    init = function()
+      -- add another silent print ( that don't leave history ) as old one.
+      vim.print_silent = vim.print
+      -- Integrates the older vim.print to new pipeline.
+      --  Without this, vim.print() can only be seen from ":messages"
+      vim.print = function(...)
+        for _, value in ipairs({ ... }) do
+          vim.notify("[vim.print] " .. vim.inspect(value), vim.log.levels.INFO)
+        end
+      end
+    end,
     keys = {
       {
         "<leader>im",
@@ -179,6 +191,22 @@ return {
       -- Since noice handles messages, we can enable snacks.notify
       -- as a fallback renderer or disable it to avoid conflicts.
       -- noice.nvim takes priority over snacks.notifier when both are loaded.
+
+      -- Allow `gf` in noice filetype buffers to open files under cursor
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "noice",
+        callback = function()
+          vim.keymap.set("n", "gf", function()
+            local f = vim.fn.findfile(vim.fn.expand("<cfile>"), "**")
+            if f == "" then
+              vim.print_silent("no file under cursor")
+            else
+              vim.cmd("close")
+              vim.cmd("e " .. f)
+            end
+          end, { buffer = true })
+        end,
+      })
     end,
   },
 }

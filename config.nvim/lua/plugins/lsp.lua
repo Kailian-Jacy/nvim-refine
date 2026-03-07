@@ -412,16 +412,17 @@ return {
       end, {})
     end,
   },
+  -- barbecue.nvim removed: winbar was disabled on startup, only nvim-navic is used (Issue #45)
+  -- Keep nvim-navic as a standalone dependency for context display (<C-G> keymap)
   {
-    "utilyre/barbecue.nvim",
-    name = "barbecue",
-    version = "*",
+    "SmiteshP/nvim-navic",
     dependencies = {
-      "SmiteshP/nvim-navic",
-      "nvim-tree/nvim-web-devicons", -- optional dependency
+      "nvim-tree/nvim-web-devicons",
     },
     opts = {
-      -- configurations go here
+      lsp = {
+        auto_attach = true,
+      },
     },
   },
   {
@@ -464,19 +465,6 @@ return {
     config = function()
       require("aerial").setup({
         backends = { "lsp", "treesitter", "markdown", "asciidoc", "man" },
-        -- optionally use on_attach to set keymaps when aerial has attached to a buffer
-        require("telescope").setup({
-          extensions = {
-            aerial = {
-              -- Display symbols as <root>.<parent>.<symbol>
-              show_nesting = {
-                ["_"] = false, -- This key will be the default
-                json = true,   -- You can set the option for specific filetypes
-                yaml = true,
-              },
-            },
-          },
-        }),
       })
     end,
   },

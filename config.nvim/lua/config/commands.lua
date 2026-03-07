@@ -775,9 +775,8 @@ vim.api.nvim_create_user_command("Cd", function(opts)
   vim.cmd("pwd")
 end, { nargs = "?" })
 
-vim.api.nvim_create_user_command("TelescopeAutoCommands", function(opts)
-  require("telescope.builtin").autocommands(opts)
-end, { desc = "Telescope picker for all auto commands and events" })
+-- TelescopeAutoCommands removed: telescope.nvim removed (Issue #45)
+-- Use `:Snacks picker` or `:autocmd` instead.
 
 -- Lint
 local function lint()

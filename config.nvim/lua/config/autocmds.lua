@@ -281,10 +281,7 @@ end
 
 vim.api.nvim_create_autocmd("TextYankPost", { callback = copy })
 
--- disable barbecue (Context) showing atop of the window
-pcall(function()
-  require("barbecue.ui").toggle(false)
-end)
+-- barbecue.nvim removed: replaced with standalone nvim-navic (Issue #45)
 
 -- Avante keymaps.
 vim.api.nvim_create_autocmd("FileType", {

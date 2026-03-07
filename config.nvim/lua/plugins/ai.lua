@@ -217,118 +217,8 @@ Output the code with warnings as-is replacement.
       }
     }
   },
-  {
-    "tzachar/cmp-tabnine",
-    -- there is some problem with tabnine installation. Just
-    -- go to the tabnine path and run the install.sh
-    enabled = false,
-    build = "./install.sh",
-    dependencies = "hrsh7th/nvim-cmp",
-  },
-  {
-    "ravitemer/mcphub.nvim",
-    enabled = false, -- Complains about version.
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-    },
-    build = "npm install -g mcp-hub@latest", -- Installs `mcp-hub` node binary globally
-    config = function()
-      local mcphub = require("mcphub")
-      mcphub.setup({
-        auto_approve = true,
-      })
-      if (vim.g.modules.rust and vim.g.modules.rust.enabled) and vim.fn.executable("rustc") then
-        mcphub.add_server("rust-playground")
-        local cache_dir = vim.fn.stdpath("cache")
-        if #cache_dir == 0 then
-          vim.notify("std path cache returns empty.")
-          return
-        end
-        cache_dir = cache_dir .. "/rust_playground"
-        if vim.fn.isdirectory(cache_dir) == 0 then
-          local ok = vim.fn.mkdir(cache_dir, "p")
-          if ok == 0 then
-            return vim.notify("Failed to create cache directory: " .. cache_dir, vim.log.levels.ERROR)
-          end
-        end
-
-        mcphub.add_tool("rust-playground", {
-          name = "run_rust_code",
-          description = "run a rust code for validation, you should not execute heavy work inside it. You can update your code from result or compilation error.",
-          inputSchema = {
-            type = "object",
-            properties = {
-              name = {
-                type = "string",
-                description = "underline_connected_func_name_test that points the function you are testing, adding _test postfix. Should be a valid filename without extension.",
-                examples = {
-                  "bpe_algorithm_test",
-                },
-              },
-              compile_only = {
-                type = "boolean",
-                description = "set to true to skip running.",
-              },
-              code = {
-                type = "string",
-                description = "code that wants to be run. Should be full code starting from main.",
-                examples = {
-                  'fn main() { println!("Hello, world!"); }',
-                },
-              },
-            },
-            required = { "name", "code" },
-          },
-          handler = function(req, res)
-            local time_stamp = os.time()
-            if not time_stamp then
-              return res:error("Failed to generate timestamp")
-            end
-            local file_abs = cache_dir .. "/" .. req.params.name .. "_" .. time_stamp .. ".rs"
-
-            local file = io.open(file_abs, "w")
-            if not file then
-              return res:error("Failed to create file: " .. file_abs)
-            end
-            file:write(req.params.code)
-            file:close()
-
-            -- Get output binary path by removing .rs extension
-            local binary_path = cache_dir .. "/" .. vim.fn.fnamemodify(file_abs, ":t:r")
-
-            -- Compile with output in same directory
-            local output = vim.fn.system({ "rustc", file_abs, "-o", binary_path })
-            local compilation_failed = vim.v.shell_error ~= 0
-
-            if compilation_failed then
-              return res:error("Compilation failed:\n" .. output)
-            end
-
-            local ret = res:text("Compilation succeeded.")
-
-            if req.params.compile_only then
-              -- Clean up binary if compile-only
-              os.remove(binary_path)
-              return ret
-            end
-
-            -- Execute the compiled binary with explicit path
-            local exec_output = vim.fn.system(binary_path)
-            local exec_failed = vim.v.shell_error ~= 0
-
-            -- Clean up binary after execution
-            os.remove(binary_path)
-
-            if exec_failed then
-              return res:error("Execution failed:\n" .. exec_output)
-            end
-
-            return ret:text("\nOutput:\n"):text(exec_output):send()
-          end,
-        })
-      end
-    end,
-  },
+  -- cmp-tabnine removed: was disabled (Issue #45)
+  -- mcphub.nvim removed: was disabled (Issue #45)
   {
     "yetone/avante.nvim",
     event = "VeryLazy",
@@ -365,26 +255,10 @@ Output the code with warnings as-is replacement.
     opts = {
       debug = false,
       mode = "legacy",
-      -- system_prompt as function ensures LLM always has latest MCP server state
-      -- This is evaluated for every message, even in existing chats
-      system_prompt = function()
-        local success, module = pcall(require, "mcphub")
-        if not success then
-          return ""
-        end
-        local hub = module.get_hub_instance()
-        return hub and hub:get_active_servers_prompt() or ""
-      end,
-      -- Using function prevents requiring mcphub before it's loaded
+      -- mcphub integration removed (Issue #45)
+      system_prompt = "",
       custom_tools = function()
-        local ret = {}
-        local success, module = pcall(require, "mcphub.extensions.avante")
-        if success then
-          vim.tbl_extend("error", ret, {
-            module.mcp_tool(),
-          })
-        end
-        return ret
+        return {}
       end,
       ---@alias Provider "claude" | "openai" | "azure" | "gemini" | "cohere" | "copilot" | string
       provider = "deepseek_internal_claude_opus", -- Recommend using Claude
@@ -506,7 +380,7 @@ Output the code with warnings as-is replacement.
     dependencies = {
       "nvim-treesitter/nvim-treesitter",
       -- "stevearc/dressing.nvim",
-      "ravitemer/mcphub.nvim",
+      -- "ravitemer/mcphub.nvim", -- removed (Issue #45)
       "nvim-lua/plenary.nvim",
       "MunifTanjim/nui.nvim",
       --- The below dependencies are optional,
