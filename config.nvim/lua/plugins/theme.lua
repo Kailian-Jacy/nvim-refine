@@ -25,7 +25,13 @@ return {
             -- If wanting to use any cursorline linked to this, need manually setting.
             CursorLine = { bg = "" },
             CursorLineNoneEmpty = { link = "Visual" },
-            -- Basics
+            -- Snacks Picker highlights.
+            -- SnacksPickerListCursorLine: Used by Snacks' update_cursorline()
+            -- when the picker is focused. Without this explicit override,
+            -- it defaults to Visual (with default=true), but we set it
+            -- explicitly to survive colorscheme changes and ensure the
+            -- selected row is always visible in the picker list.
+            SnacksPickerListCursorLine = { link = "CursorLineNoneEmpty" },
             SnacksPickerDir = { link = "SnacksPickerFile" },
             -- SnacksPickerDir = { link = "Delimiter" },
             SnacksPickerMatch = { link = "Search" },
