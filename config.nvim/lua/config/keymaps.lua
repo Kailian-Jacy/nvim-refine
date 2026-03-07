@@ -344,9 +344,31 @@ vim.keymap.set("n", "<leader>uP", ":PinTab ", { noremap = true, silent = true })
 -- Neovide transparency control
 vim.keymap.set("n", "<leader>uT", "<cmd>NeovideTransparentToggle<cr>", { noremap = true, silent = true })
 
--- context display
+-- context display (lightweight replacement for nvim-navic)
 vim.keymap.set({ "n", "i", "x" }, "<C-G>", function()
-  vim.print_silent(require("nvim-navic").get_location() or "N.A.")
+  local params = vim.lsp.util.make_position_params()
+  vim.lsp.buf_request(0, "textDocument/documentSymbol", params, function(err, result)
+    if err or not result then
+      vim.print_silent("N.A.")
+      return
+    end
+    -- Walk the symbol tree to find the deepest symbol containing the cursor
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local row, col = cursor[1] - 1, cursor[2]
+    local path = {}
+    local function walk(symbols)
+      for _, sym in ipairs(symbols) do
+        local range = sym.range or sym.location and sym.location.range
+        if range and range.start.line <= row and range["end"].line >= row then
+          table.insert(path, sym.name)
+          if sym.children then walk(sym.children) end
+          return
+        end
+      end
+    end
+    walk(result)
+    vim.print_silent(#path > 0 and table.concat(path, " > ") or "N.A.")
+  end)
 end)
 
 -- Mapping and unmapping during debugging.
