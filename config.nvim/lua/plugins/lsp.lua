@@ -413,18 +413,6 @@ return {
     end,
   },
   {
-    "utilyre/barbecue.nvim",
-    name = "barbecue",
-    version = "*",
-    dependencies = {
-      "SmiteshP/nvim-navic",
-      "nvim-tree/nvim-web-devicons", -- optional dependency
-    },
-    opts = {
-      -- configurations go here
-    },
-  },
-  {
     "smjonas/inc-rename.nvim",
     keys = {
       {
@@ -464,19 +452,6 @@ return {
     config = function()
       require("aerial").setup({
         backends = { "lsp", "treesitter", "markdown", "asciidoc", "man" },
-        -- optionally use on_attach to set keymaps when aerial has attached to a buffer
-        require("telescope").setup({
-          extensions = {
-            aerial = {
-              -- Display symbols as <root>.<parent>.<symbol>
-              show_nesting = {
-                ["_"] = false, -- This key will be the default
-                json = true,   -- You can set the option for specific filetypes
-                yaml = true,
-              },
-            },
-          },
-        }),
       })
     end,
   },

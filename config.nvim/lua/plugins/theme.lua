@@ -49,8 +49,6 @@ return {
             StatusLineTerm = { bg = "" },
             WinBar = { bg = "" },
             WinBarNC = { bg = "" },
-            -- Telescope borders
-            TelescopeBorder = { link = "Constant" },
             WinSeparator = { fg = "#565f89" },
             -- Message region separator
             MsgSeparator = { bg = "" },
