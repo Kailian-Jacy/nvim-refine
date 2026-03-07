@@ -1187,55 +1187,7 @@ return {
   },
 
   -- telescope.nvim removed: replaced by Snacks picker (see issue #45)
-  -- {
-  --   'nvim-telescope/telescope-fzf-native.nvim',
-  --   build = 'cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release',
-  --   config = function ()
-  --     -- To get fzf loaded and working with telescope, you need to call
-  --     -- load_extension, somewhere after setup function:
-  --     require('telescope').load_extension('fzf')
-  --   end
-  -- },
-  --[[{
-    'nvimdev/dashboard-nvim',
-    event = 'VimEnter',
-    config = function()
-      require('dashboard').setup {
-        theme = 'hyper',
-        config = {
-          week_header = {
-            enable = true,
-          },
-          project = { enable = true, limit = 8, icon = 'your icon', label = '', action = 'Telescope find_files cwd=' },
-          mru = { limit = 10, icon = 'your icon', label = '', cwd_only = false },
-          shortcut = {
-            { desc = '󰊳 Update', group = '@property', action = 'Lazy update', key = 'u' },
-            {
-              icon = '??? ',
-              icon_hl = '@variable',
-              desc = 'Files',
-              group = 'Label',
-              action = 'Telescope find_files',
-              key = 'f',
-            },
-            {
-              desc = '??? Apps',
-              group = 'DiagnosticHint',
-              action = 'Telescope app',
-              key = 'a',
-            },
-            {
-              desc = ' dotfiles',
-              group = 'Number',
-              action = 'Telescope dotfiles',
-              key = 'd',
-            },
-          },
-        },
-      }
-    end,
-    dependencies = { { 'nvim-tree/nvim-web-devicons' } }
-  },]]
+
   {
     "okuuva/auto-save.nvim",
     event = { "InsertLeave", "TextChanged" },

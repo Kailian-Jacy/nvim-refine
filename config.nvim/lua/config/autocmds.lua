@@ -192,7 +192,6 @@ vim.api.nvim_create_autocmd("BufRead", {
   group = vim.api.nvim_create_augroup("markdown", { clear = true }),
   callback = function(opts)
     if is_obs_md(opts.buf) then
-      vim.keymap.set({ "n", "v" }, "<leader>fd", "<cmd>ObsidianBridgeTelescopeCommand<CR>", { buffer = true })
       vim.keymap.set({ "n", "v" }, "gf", function()
         if require("obsidian").util.cursor_on_markdown_link() then
           return "<cmd>ObsidianFollowLink<CR>"

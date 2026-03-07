@@ -346,7 +346,7 @@ vim.keymap.set("n", "<leader>uT", "<cmd>NeovideTransparentToggle<cr>", { noremap
 
 -- context display (lightweight replacement for nvim-navic)
 vim.keymap.set({ "n", "i", "x" }, "<C-G>", function()
-  local params = vim.lsp.util.make_position_params()
+  local params = vim.lsp.util.make_text_document_params()
   vim.lsp.buf_request(0, "textDocument/documentSymbol", params, function(err, result)
     if err or not result then
       vim.print_silent("N.A.")

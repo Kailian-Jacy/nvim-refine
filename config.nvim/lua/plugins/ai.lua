@@ -254,10 +254,7 @@ Output the code with warnings as-is replacement.
     opts = {
       debug = false,
       mode = "legacy",
-      -- system_prompt as function ensures LLM always has latest MCP server state
-      -- This is evaluated for every message, even in existing chats
       system_prompt = "",
-      -- Using function prevents requiring mcphub before it's loaded
       custom_tools = {},
       ---@alias Provider "claude" | "openai" | "azure" | "gemini" | "cohere" | "copilot" | string
       provider = "deepseek_internal_claude_opus", -- Recommend using Claude
