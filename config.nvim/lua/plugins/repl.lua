@@ -79,21 +79,13 @@ return {
       })
 
       -- ============================================================
-      -- 2. C-c clears current input line in terminal/REPL buffers
+      -- 2. C-c clears current input line in dap-repl buffers
       -- ============================================================
-      vim.api.nvim_create_autocmd("TermOpen", {
-        callback = function(args)
-          -- In terminal mode, C-c should send interrupt AND clear the line
-          -- The default terminal C-c sends SIGINT which usually clears the line
-          -- but for some REPLs (like Python's), we need to ensure proper behavior
-          vim.keymap.set("t", "<C-c>", function()
-            -- Send Ctrl-C (ETX, 0x03) which is the standard interrupt signal
-            -- This should clear the current line in most shells and REPLs
-            local keys = vim.api.nvim_replace_termcodes("<C-c>", true, false, true)
-            vim.api.nvim_feedkeys(keys, "t", false)
-          end, { buffer = args.buf, desc = "Send interrupt and clear line in terminal" })
-        end,
-      })
+      -- NOTE: A TermOpen autocmd that mapped <C-c> in terminal mode was removed
+      -- here (fix for issue #50). It used nvim_feedkeys with "t" flag, which
+      -- caused infinite recursion: the fed keys went through mapping resolution,
+      -- re-triggering the same mapping, freezing Neovim. The mapping was also
+      -- redundant — Neovim already sends SIGINT on <C-c> in terminal buffers.
 
       -- For dap-repl specifically, C-c should clear the current input
       vim.api.nvim_create_autocmd("FileType", {
