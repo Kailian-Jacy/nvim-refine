@@ -1,11 +1,14 @@
 """Category A: Configuration validation tests (P0)."""
 import pytest
 import subprocess
+import re
 import os
 
 LAZY_DIR = os.path.expanduser("~/.local/share/nvim/lazy")
 DAP_VIEW_PATH = os.path.join(LAZY_DIR, "nvim-dap-view")
 DAP_PATH = os.path.join(LAZY_DIR, "nvim-dap")
+REPO_DIR = os.path.expanduser("~/.openclaw/workspace/nvim-refine")
+DEBUG_LUA = os.path.join(REPO_DIR, "config.nvim", "lua", "plugins", "debug.lua")
 
 
 def _run_nvim_lua(lua_code: str, timeout: float = 10.0) -> subprocess.CompletedProcess:
@@ -109,3 +112,90 @@ class TestConfigEdgeCases:
         )
         result = _run_nvim_lua(lua)
         assert "CONFIG_OK" in result.output, f"Expected success, got: {result.output}"
+
+
+class TestRealDebugLua:
+    """Regression tests against the real config.nvim/lua/plugins/debug.lua file.
+    
+    These tests parse the actual debug.lua to verify the fix hasn't regressed.
+    If someone changes hide={} back to hide=true or width back to size,
+    these tests WILL fail.
+    """
+
+    def _read_debug_lua(self) -> str:
+        """Read the real debug.lua file content."""
+        with open(DEBUG_LUA, "r") as f:
+            return f.read()
+
+    def _extract_terminal_block(self, content: str) -> str:
+        """Extract the windows.terminal config block from debug.lua."""
+        # Find the terminal = { ... } block inside the dap-view setup call
+        # Look for the terminal block between 'terminal = {' and its closing '}'
+        match = re.search(
+            r'windows\s*=\s*\{[^}]*terminal\s*=\s*\{(.*?)\}',
+            content,
+            re.DOTALL,
+        )
+        assert match, "Could not find windows.terminal block in debug.lua"
+        return match.group(1)
+
+    def test_real_debug_lua_hide_is_table(self):
+        """REGRESSION: debug.lua hide field must be a Lua table, not a boolean."""
+        content = self._read_debug_lua()
+        terminal_block = self._extract_terminal_block(content)
+
+        # Must NOT contain 'hide = true' or 'hide = false'
+        assert not re.search(r'hide\s*=\s*true', terminal_block), \
+            "REGRESSION: hide is set to boolean 'true' — must be a table like {} or {\"debugpy\"}"
+        assert not re.search(r'hide\s*=\s*false', terminal_block), \
+            "REGRESSION: hide is set to boolean 'false' — must be a table like {} or {\"debugpy\"}"
+
+        # Must contain 'hide = {' (table form)
+        assert re.search(r'hide\s*=\s*\{', terminal_block), \
+            "REGRESSION: hide must be a table (e.g. {} or {\"debugpy\"}), not found"
+
+    def test_real_debug_lua_uses_width_not_size(self):
+        """REGRESSION: debug.lua terminal must use 'width', not 'size'."""
+        content = self._read_debug_lua()
+        terminal_block = self._extract_terminal_block(content)
+
+        # Must NOT contain 'size ='
+        assert not re.search(r'\bsize\s*=', terminal_block), \
+            "REGRESSION: terminal config uses 'size' — must use 'width'"
+
+        # Must contain 'width ='
+        assert re.search(r'\bwidth\s*=', terminal_block), \
+            "REGRESSION: terminal config must have 'width' field"
+
+    def test_real_debug_lua_dap_view_setup_succeeds(self):
+        """REGRESSION: The actual dap-view config from debug.lua loads without error.
+        
+        Extracts the dap-view.setup() call from debug.lua and runs it in headless nvim.
+        """
+        content = self._read_debug_lua()
+
+        # Extract the full setup call: require("dap-view").setup({...})
+        # Find it by locating the setup block
+        match = re.search(
+            r'require\("dap-view"\)\.setup\((\{.*?\})\)\s*$',
+            content,
+            re.DOTALL | re.MULTILINE,
+        )
+        assert match, "Could not find dap-view.setup() call in debug.lua"
+        setup_arg = match.group(1)
+
+        # Replace any require() calls in the config with stubs to avoid
+        # needing the full plugin ecosystem
+        # The base_sections contain action functions with require("dap-view.views")
+        # which will be available since we add dap-view to rtp
+        lua = (
+            f"vim.opt.rtp:append('{DAP_PATH}'); "
+            f"vim.opt.rtp:append('{DAP_VIEW_PATH}'); "
+            f"local ok, err = pcall(function() "
+            f"require('dap-view').setup({setup_arg}) "
+            f"end); "
+            f"if ok then print('CONFIG_OK') else print('CONFIG_ERROR: ' .. tostring(err)) end"
+        )
+        result = _run_nvim_lua(lua)
+        assert "CONFIG_OK" in result.output, \
+            f"REGRESSION: Real debug.lua dap-view config fails to load: {result.output}"

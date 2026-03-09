@@ -12,17 +12,6 @@ from utils.nvim_helpers import (
 from utils.tmux_helpers import tmux_kill_session
 
 
-@pytest.fixture(scope="session")
-def test_dir(tmp_path_factory):
-    """Create a temporary directory for test files."""
-    d = tmp_path_factory.mktemp("dap_tests")
-    # Copy test fixture
-    src = os.path.join(FIXTURES_DIR, "test_debug.py")
-    dst = os.path.join(str(d), "test_debug.py")
-    shutil.copy2(src, dst)
-    return str(d)
-
-
 @pytest.fixture
 def work_dir(tmp_path):
     """Create a per-test working directory with test fixture."""

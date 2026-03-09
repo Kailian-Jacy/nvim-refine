@@ -26,26 +26,11 @@ def _test_terminal_config(hide: str, extra: str = "") -> subprocess.CompletedPro
 
 
 class TestTerminalHideConfig:
-    """Tests for terminal hide configuration variants."""
-
-    def test_hide_empty_table(self):
-        """G1: hide={} — terminal shown for all adapters."""
-        result = _test_terminal_config(hide="{}")
-        assert "CONFIG_OK" in result.output
-
-    def test_hide_debugpy(self):
-        """G2: hide={"debugpy"} — valid config."""
-        result = _test_terminal_config(hide='{"debugpy"}')
-        assert "CONFIG_OK" in result.output
+    """Tests for terminal hide configuration variants (non-overlapping with test_config.py)."""
 
     def test_hide_codelldb(self):
         """hide={"codelldb"} — valid config."""
         result = _test_terminal_config(hide='{"codelldb"}')
-        assert "CONFIG_OK" in result.output
-
-    def test_hide_multiple_adapters(self):
-        """hide={"debugpy","codelldb"} — valid config."""
-        result = _test_terminal_config(hide='{"debugpy","codelldb"}')
         assert "CONFIG_OK" in result.output
 
     def test_start_hidden_true(self):
