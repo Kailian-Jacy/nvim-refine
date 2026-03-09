@@ -28,6 +28,7 @@ return {
       { "hrsh7th/cmp-buffer" },
       { "hrsh7th/cmp-git" },
       { "hrsh7th/cmp-path" },
+      { "lukas-reineke/cmp-under-comparator" },
     },
     config = function()
       local cmp = require("cmp")
@@ -78,13 +79,24 @@ return {
         return nil -- Fall through to next comparator
       end
 
-      -- Prefer items that start with the input (prefix match) over fuzzy matches
+      -- Prefer items that start with the input (prefix match) over fuzzy matches.
+      -- Uses live vim context (not entry context) to ensure strict weak ordering:
+      -- entry1.context may differ from entry2.context when sources are isIncomplete
+      -- (e.g. cmdline source), which would violate antisymmetry. (fix #52)
       local prefix_match_comparator = function(entry1, entry2)
-        local ctx = entry1.context
-        if not ctx or not ctx.cursor_before_line then
-          return nil
+        local cursor_before_line
+        if vim.fn.mode() == "c" then
+          local pos = vim.fn.getcmdpos()
+          cursor_before_line = string.sub(vim.fn.getcmdline(), 1, pos - 1)
+        else
+          local ok, cursor = pcall(vim.api.nvim_win_get_cursor, 0)
+          if not ok then
+            return nil
+          end
+          cursor_before_line = string.sub(vim.api.nvim_get_current_line(), 1, cursor[2])
         end
-        local input = ctx.cursor_before_line:match("[%w_]+$") or ""
+
+        local input = cursor_before_line:match("[%w_]+$") or ""
         if #input == 0 then
           return nil
         end
@@ -345,7 +357,22 @@ return {
           disallow_symbol_nonprefix_matching = false,
         },
       })
+      -- Cmdline sorting: omit insert-mode-specific comparators (locality_bonus,
+      -- prefix_match) that are unnecessary for cmdline and could cause issues
+      -- with context inconsistency. (fix #52)
+      local cmdline_sorting = {
+        priority_weight = 2,
+        comparators = {
+          cmp.config.compare.recently_used,
+          cmp.config.compare.exact,
+          cmp.config.compare.score,
+          cmp.config.compare.kind,
+          cmp.config.compare.order,
+        },
+      }
+
       cmp.setup.cmdline({ "/", "?" }, {
+        sorting = cmdline_sorting,
         mapping = cmp.mapping.preset.cmdline({
           ["<Down>"] = {
             c = function(fallback)
@@ -378,6 +405,7 @@ return {
       })
       -- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
       cmp.setup.cmdline(":", {
+        sorting = cmdline_sorting,
         mapping = cmp.mapping.preset.cmdline({
           ["<Down>"] = {
             c = function(fallback)
