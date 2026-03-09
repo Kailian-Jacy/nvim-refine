@@ -88,8 +88,8 @@ vim.keymap.set({ "i", "n" }, "<C-c>", function()
     vim.notify("runner cancelled.")
     return
   end
-  -- Fallback to insert as normal.
-  vim.api.nvim_feedkeys("<C-c>", "t", false)
+  -- Fallback: send actual Ctrl-C termcode with "n" (noremap) flag to avoid recursion.
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-c>", true, false, true), "n", false)
 end, { desc = "interrup running scripts" })
 
 vim.keymap.set({ "n", "v" }, "<c-s-cr>", "<cmd>RunScript<CR>", { desc = "run current script" })
