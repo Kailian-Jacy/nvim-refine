@@ -122,10 +122,10 @@ return {
           terminal = {
             -- Position: bottom split for terminal output
             position = "right",
-            -- Height of the terminal window
-            size = 0.35,
-            -- Hide the terminal when not in a debug session
-            hide = true,
+            -- Width of the terminal window
+            width = 0.35,
+            -- Hide the terminal for specific adapters (empty = show for all)
+            hide = {},
           },
         },
         -- Automatically open dap-view when debug session starts
