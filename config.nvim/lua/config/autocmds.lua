@@ -272,13 +272,28 @@ if vim.g.read_binary_with_xxd or false then
 end
 
 -- OSC52 to sync remote to local clipboard.
-local copy = function()
-  if vim.v.event.operator == "y" then
-    require("vim.ui.clipboard.osc52").copy('"')
+-- When yanking, send the content via OSC52 so the terminal emulator
+-- can place it on the system clipboard (works over SSH/tmux).
+local osc52_yank = function()
+  if vim.v.event.operator ~= "y" then
+    return
   end
+  -- Only unnamed register yanks — named register yanks ("*y via Y keymap)
+  -- are handled by neovim's native clipboard provider automatically.
+  if vim.v.event.regname ~= "" then
+    return
+  end
+  local lines = vim.v.event.regcontents
+  if not lines or #lines == 0 then
+    return
+  end
+  -- copy("+") returns a function; call it with the lines to send OSC52.
+  -- Use "+" (clipboard 'c') so it lands in the system clipboard register,
+  -- matching what Cmd+V / <C-R>+ reads on the local side.
+  require("vim.ui.clipboard.osc52").copy("+")(lines)
 end
 
-vim.api.nvim_create_autocmd("TextYankPost", { callback = copy })
+vim.api.nvim_create_autocmd("TextYankPost", { callback = osc52_yank })
 
 -- barbecue.nvim removed (issue #45)
 

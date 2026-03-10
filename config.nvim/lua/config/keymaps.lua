@@ -18,7 +18,7 @@ vim.api.nvim_set_keymap("c", "<D-v>", "<C-r>+", { noremap = true, silent = true 
 
 -- Local workaround for osc52 copy from remote.
 -- vim.keymap.set({ "n", "v" }, "D", '"*d') -- Deprecated to enable "D": delete until the end of line.
-vim.keymap.set({ "n", "v" }, "Y", '"*y')
+vim.keymap.set({ "n", "v" }, "Y", '"+y')
 
 -- Command mode keymaps:
 vim.keymap.set("c", "<c-e>", "<end>", { desc = "move cursor to the end" })
